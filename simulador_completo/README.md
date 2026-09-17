@@ -128,6 +128,11 @@ Os mesmos do simulador do Mancha Mínimo:
 | `R`       | reinicia a CPU (registradores em 0, refaz o boot do quadro 0) |
 | `F`       | termina o simulador |
 
+## T1 — gerador de números pseudoaleatórios
+
+Entrega do T1: arquivos `gera_aleatorio.asm` e `teste_aleatorio.asm` (ambos em
+`exemplos/`), descritos na lista abaixo.
+
 ## Exemplos (`exemplos/`)
 
 - **`soma.asm`**: calcula `par1 + par2` e guarda em `resultado`, depois pára.
@@ -157,6 +162,17 @@ Os mesmos do simulador do Mancha Mínimo:
   `pt` (ponteiro da tabela de páginas, em modo paginação) são o **mesmo**
   registrador físico (`s4`), o que exige cuidado especial na transição de um
   modo para o outro.
+- **`gera_aleatorio.asm`**: sub-rotina que implementa um gerador de números
+  pseudoaleatórios por congruência linear (LCG: `x = (13x + 7) mod 256`). Na
+  primeira chamada usa o contador do relógio (porta `0020`) como semente; nas
+  chamadas seguintes usa o valor salvo em `semente`. É uma rotina de
+  biblioteca (sem `.org 0`/quadro de boot nem `halt`), não executável
+  sozinha — precisa ser chamada (`call gera_aleatorio`) a partir de um
+  programa com ponto de entrada, como o `teste_aleatorio.asm` a seguir.
+- **`teste_aleatorio.asm`**: programa de teste de `gera_aleatorio.asm`. Os
+  dois são montados juntos, num único módulo (`.ext`/mesma chamada do
+  montador — ver "Simplificações assumidas" acima), chamando a rotina 10
+  vezes e imprimindo cada valor gerado (0-255) em hexadecimal no console.
 
 ## Validação
 
@@ -179,6 +195,9 @@ um operador real digitando comandos:
 - `paginacao.mob`: escreve e lê de volta corretamente através da tabela de
   páginas (`r3`=1 = sucesso), com a tela mostrando `P=1`, modo "paginacao" e
   o registrador `pt` corretamente identificado. ✓
+- `teste_aleatorio.mob` (com `gera_aleatorio.mob` no mesmo módulo): os 10
+  valores impressos no console foram `07 62 01 14 0B 96 A5 68 4F 0A`, com a
+  CPU parando (`halt`) após 547 instruções. ✓
 
 Durante a validação foram encontrados e corrigidos dois problemas reais de
 implementação (não apenas do exemplo em teste):
