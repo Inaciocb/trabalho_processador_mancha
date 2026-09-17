@@ -1,5 +1,3 @@
-# Desafios em assembly — Mancha
-
 **Alunos: Inácio Buemo e Kaio Fernandes**
 
 As soluções usam o simulador original, sem alterar a CPU, os dispositivos ou
