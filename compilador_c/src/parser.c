@@ -1405,7 +1405,6 @@ void compilador_compila(token_t *tokens, int n_tokens, FILE *saida, unsigned pre
   for (int i = 0; i < n_pool; i++) {
     fprintf(saida, "%s:\n\t.db ", pool[i].rotulo);
     for (int k = 0; k <= pool[i].len; k++) fprintf(saida, "%d%s", (unsigned char)pool[i].texto[k], k < pool[i].len ? ", " : "\n");
-    if (pool[i].len == 0) fprintf(saida, "0\n");
   }
 
   free(buf_texto);
