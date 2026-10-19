@@ -25,7 +25,7 @@ _f_getchar:
 	call _f_mancha_in
 	add sp, 2
 	st r0, (bp+-2)
-_L71ab4180_4:
+_L74bf4787_4:
 	ld r0, (bp+-2)
 	push r0
 	ld r0, 2
@@ -37,21 +37,21 @@ _L71ab4180_4:
 	ld r1, r0
 	pop r0
 	cmp r0, r1
-	jmpc eq, _L71ab4180_6
+	jmpc eq, _L74bf4787_6
 	ld r0, 0
-	jmp _L71ab4180_7
-_L71ab4180_6:
+	jmp _L74bf4787_7
+_L74bf4787_6:
 	ld r0, 1
-_L71ab4180_7:
+_L74bf4787_7:
 	cmp r0, 0
-	jmpc eq, _L71ab4180_5
+	jmpc eq, _L74bf4787_5
 	ld r0, 2
 	push r0
 	call _f_mancha_in
 	add sp, 2
 	st r0, (bp+-2)
-	jmp _L71ab4180_4
-_L71ab4180_5:
+	jmp _L74bf4787_4
+_L74bf4787_5:
 	ld r0, 1
 	push r0
 	call _f_mancha_in
@@ -65,7 +65,7 @@ _L71ab4180_5:
 _f_puts:
 	push bp
 	ld bp, sp
-_L71ab4180_12:
+_L74bf4787_12:
 	ld r0, (bp+4)
 	ld r1, r0
 	ldb r0, (r1)
@@ -75,14 +75,14 @@ _L71ab4180_12:
 	ld r1, r0
 	pop r0
 	cmp r0, r1
-	jmpc ne, _L71ab4180_14
+	jmpc ne, _L74bf4787_14
 	ld r0, 0
-	jmp _L71ab4180_15
-_L71ab4180_14:
+	jmp _L74bf4787_15
+_L74bf4787_14:
 	ld r0, 1
-_L71ab4180_15:
+_L74bf4787_15:
 	cmp r0, 0
-	jmpc eq, _L71ab4180_13
+	jmpc eq, _L74bf4787_13
 	ld r0, (bp+4)
 	ld r1, r0
 	ldb r0, (r1)
@@ -97,8 +97,8 @@ _L71ab4180_15:
 	pop r0
 	add r0, r1
 	st r0, (bp+4)
-	jmp _L71ab4180_12
-_L71ab4180_13:
+	jmp _L74bf4787_12
+_L74bf4787_13:
 	ld r0, 10
 	push r0
 	call _f_putchar
@@ -120,35 +120,35 @@ _f_print_int:
 	ld r1, r0
 	pop r0
 	cmp r0, r1
-	jmpc lt, _L71ab4180_31
+	jmpc lt, _L74bf4787_31
 	ld r0, 0
-	jmp _L71ab4180_32
-_L71ab4180_31:
+	jmp _L74bf4787_32
+_L74bf4787_31:
 	ld r0, 1
-_L71ab4180_32:
+_L74bf4787_32:
 	cmp r0, 0
-	jmpc eq, _L71ab4180_33
+	jmpc eq, _L74bf4787_33
 	ld r0, 1
 	st r0, (bp+-12)
 	ld r0, (bp+4)
 	xor r0, -1
 	add r0, 1
 	st r0, (bp+4)
-_L71ab4180_33:
+_L74bf4787_33:
 	ld r0, (bp+4)
 	push r0
 	ld r0, 0
 	ld r1, r0
 	pop r0
 	cmp r0, r1
-	jmpc eq, _L71ab4180_34
+	jmpc eq, _L74bf4787_34
 	ld r0, 0
-	jmp _L71ab4180_35
-_L71ab4180_34:
+	jmp _L74bf4787_35
+_L74bf4787_34:
 	ld r0, 1
-_L71ab4180_35:
+_L74bf4787_35:
 	cmp r0, 0
-	jmpc eq, _L71ab4180_36
+	jmpc eq, _L74bf4787_36
 	ld r0, bp
 	add r0, -8
 	push r0
@@ -162,22 +162,22 @@ _L71ab4180_35:
 	stb r0, (r1)
 	ld r0, 1
 	st r0, (bp+-10)
-_L71ab4180_36:
-_L71ab4180_37:
+_L74bf4787_36:
+_L74bf4787_37:
 	ld r0, (bp+4)
 	push r0
 	ld r0, 0
 	ld r1, r0
 	pop r0
 	cmp r0, r1
-	jmpc gt, _L71ab4180_39
+	jmpc gt, _L74bf4787_39
 	ld r0, 0
-	jmp _L71ab4180_40
-_L71ab4180_39:
+	jmp _L74bf4787_40
+_L74bf4787_39:
 	ld r0, 1
-_L71ab4180_40:
+_L74bf4787_40:
 	cmp r0, 0
-	jmpc eq, _L71ab4180_38
+	jmpc eq, _L74bf4787_38
 	ld r0, bp
 	add r0, -8
 	push r0
@@ -217,31 +217,31 @@ _L71ab4180_40:
 	pop r0
 	div r0, r1
 	st r0, (bp+4)
-	jmp _L71ab4180_37
-_L71ab4180_38:
+	jmp _L74bf4787_37
+_L74bf4787_38:
 	ld r0, (bp+-12)
 	cmp r0, 0
-	jmpc eq, _L71ab4180_41
+	jmpc eq, _L74bf4787_41
 	ld r0, 45
 	push r0
 	call _f_putchar
 	add sp, 2
-_L71ab4180_41:
-_L71ab4180_42:
+_L74bf4787_41:
+_L74bf4787_42:
 	ld r0, (bp+-10)
 	push r0
 	ld r0, 0
 	ld r1, r0
 	pop r0
 	cmp r0, r1
-	jmpc gt, _L71ab4180_44
+	jmpc gt, _L74bf4787_44
 	ld r0, 0
-	jmp _L71ab4180_45
-_L71ab4180_44:
+	jmp _L74bf4787_45
+_L74bf4787_44:
 	ld r0, 1
-_L71ab4180_45:
+_L74bf4787_45:
 	cmp r0, 0
-	jmpc eq, _L71ab4180_43
+	jmpc eq, _L74bf4787_43
 	ld r0, (bp+-10)
 	push r0
 	ld r0, 1
@@ -261,8 +261,8 @@ _L71ab4180_45:
 	push r0
 	call _f_putchar
 	add sp, 2
-	jmp _L71ab4180_42
-_L71ab4180_43:
+	jmp _L74bf4787_42
+_L74bf4787_43:
 	ld sp, bp
 	pop bp
 	ret
@@ -270,25 +270,25 @@ _f_print_hex:
 	push bp
 	ld bp, sp
 	sub sp, 6
-	ld r0, _str71ab4180_1
+	ld r0, _str74bf4787_1
 	st r0, (bp+-2)
 	ld r0, 12
 	st r0, (bp+-4)
-_L71ab4180_50:
+_L74bf4787_50:
 	ld r0, (bp+-4)
 	push r0
 	ld r0, 0
 	ld r1, r0
 	pop r0
 	cmp r0, r1
-	jmpc ge, _L71ab4180_52
+	jmpc ge, _L74bf4787_52
 	ld r0, 0
-	jmp _L71ab4180_53
-_L71ab4180_52:
+	jmp _L74bf4787_53
+_L74bf4787_52:
 	ld r0, 1
-_L71ab4180_53:
+_L74bf4787_53:
 	cmp r0, 0
-	jmpc eq, _L71ab4180_51
+	jmpc eq, _L74bf4787_51
 	ld r0, (bp+4)
 	push r0
 	ld r0, (bp+-4)
@@ -319,8 +319,8 @@ _L71ab4180_53:
 	pop r0
 	sub r0, r1
 	st r0, (bp+-4)
-	jmp _L71ab4180_50
-_L71ab4180_51:
+	jmp _L74bf4787_50
+_L74bf4787_51:
 	ld sp, bp
 	pop bp
 	ret
@@ -328,7 +328,7 @@ _L71ab4180_51:
 .data
 
 ; ----- literais de string -----
-_str71ab4180_0:
+_str74bf4787_0:
 	.db 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 65, 66, 67, 68, 69, 70, 0
-_str71ab4180_1:
+_str74bf4787_1:
 	.db 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 65, 66, 67, 68, 69, 70, 0

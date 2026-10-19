@@ -127,21 +127,21 @@ _f_main:
 	add sp, 2
 	ld r0, 0
 	st r0, (bp+-14)
-_L71b44180_8:
+_L74a24788_8:
 	ld r0, (bp+-14)
 	push r0
 	ld r0, 3
 	ld r1, r0
 	pop r0
 	cmp r0, r1
-	jmpc lt, _L71b44180_10
+	jmpc lt, _L74a24788_10
 	ld r0, 0
-	jmp _L71b44180_11
-_L71b44180_10:
+	jmp _L74a24788_11
+_L74a24788_10:
 	ld r0, 1
-_L71b44180_11:
+_L74a24788_11:
 	cmp r0, 0
-	jmpc eq, _L71b44180_9
+	jmpc eq, _L74a24788_9
 	ld r0, _g_vetores
 	push r0
 	ld r0, (bp+-14)
@@ -179,25 +179,25 @@ _L71b44180_11:
 	pop r0
 	add r0, r1
 	st r0, (bp+-14)
-	jmp _L71b44180_8
-_L71b44180_9:
+	jmp _L74a24788_8
+_L74a24788_9:
 	ld r0, 0
 	st r0, (bp+-14)
-_L71b44180_12:
+_L74a24788_12:
 	ld r0, (bp+-14)
 	push r0
 	ld r0, 3
 	ld r1, r0
 	pop r0
 	cmp r0, r1
-	jmpc lt, _L71b44180_14
+	jmpc lt, _L74a24788_14
 	ld r0, 0
-	jmp _L71b44180_15
-_L71b44180_14:
+	jmp _L74a24788_15
+_L74a24788_14:
 	ld r0, 1
-_L71b44180_15:
+_L74a24788_15:
 	cmp r0, 0
-	jmpc eq, _L71b44180_13
+	jmpc eq, _L74a24788_13
 	ld r0, _g_vetores
 	push r0
 	ld r0, (bp+-14)
@@ -233,8 +233,8 @@ _L71b44180_15:
 	pop r0
 	add r0, r1
 	st r0, (bp+-14)
-	jmp _L71b44180_12
-_L71b44180_13:
+	jmp _L74a24788_12
+_L74a24788_13:
 	ld r0, 10
 	push r0
 	call _f_putchar

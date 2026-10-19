@@ -6,21 +6,21 @@ _f_main:
 	sub sp, 2
 	ld r0, 0
 	st r0, (bp+-2)
-_L71b64180_16:
+_L74a04788_16:
 	ld r0, (bp+-2)
 	push r0
 	ld r0, 5
 	ld r1, r0
 	pop r0
 	cmp r0, r1
-	jmpc lt, _L71b64180_18
+	jmpc lt, _L74a04788_18
 	ld r0, 0
-	jmp _L71b64180_19
-_L71b64180_18:
+	jmp _L74a04788_19
+_L74a04788_18:
 	ld r0, 1
-_L71b64180_19:
+_L74a04788_19:
 	cmp r0, 0
-	jmpc eq, _L71b64180_17
+	jmpc eq, _L74a04788_17
 	ld r0, _g_quadrados
 	push r0
 	ld r0, (bp+-2)
@@ -48,25 +48,25 @@ _L71b64180_19:
 	pop r0
 	add r0, r1
 	st r0, (bp+-2)
-	jmp _L71b64180_16
-_L71b64180_17:
+	jmp _L74a04788_16
+_L74a04788_17:
 	ld r0, 0
 	st r0, (bp+-2)
-_L71b64180_20:
+_L74a04788_20:
 	ld r0, (bp+-2)
 	push r0
 	ld r0, 5
 	ld r1, r0
 	pop r0
 	cmp r0, r1
-	jmpc lt, _L71b64180_22
+	jmpc lt, _L74a04788_22
 	ld r0, 0
-	jmp _L71b64180_23
-_L71b64180_22:
+	jmp _L74a04788_23
+_L74a04788_22:
 	ld r0, 1
-_L71b64180_23:
+_L74a04788_23:
 	cmp r0, 0
-	jmpc eq, _L71b64180_21
+	jmpc eq, _L74a04788_21
 	ld r0, _g_quadrados
 	push r0
 	ld r0, (bp+-2)
@@ -88,8 +88,8 @@ _L71b64180_23:
 	pop r0
 	add r0, r1
 	st r0, (bp+-2)
-	jmp _L71b64180_20
-_L71b64180_21:
+	jmp _L74a04788_20
+_L74a04788_21:
 	ld r0, 10
 	push r0
 	call _f_putchar
@@ -100,19 +100,19 @@ _L71b64180_21:
 	ld r1, r0
 	pop r0
 	cmp r0, r1
-	jmpc gt, _L71b64180_26
+	jmpc gt, _L74a04788_26
 	ld r0, 0
-	jmp _L71b64180_27
-_L71b64180_26:
+	jmp _L74a04788_27
+_L74a04788_26:
 	ld r0, 1
-_L71b64180_27:
+_L74a04788_27:
 	cmp r0, 0
-	jmpc eq, _L71b64180_24
+	jmpc eq, _L74a04788_24
 	ld r0, 3
-	jmp _L71b64180_25
-_L71b64180_24:
+	jmp _L74a04788_25
+_L74a04788_24:
 	ld r0, 7
-_L71b64180_25:
+_L74a04788_25:
 	push r0
 	call _f_print_int
 	add sp, 2
@@ -131,24 +131,24 @@ _L71b64180_25:
 	ld r1, r0
 	pop r0
 	cmp r0, r1
-	jmpc gt, _L71b64180_30
+	jmpc gt, _L74a04788_30
 	ld r0, 0
-	jmp _L71b64180_31
-_L71b64180_30:
+	jmp _L74a04788_31
+_L74a04788_30:
 	ld r0, 1
-_L71b64180_31:
+_L74a04788_31:
 	cmp r0, 0
-	jmpc eq, _L71b64180_28
+	jmpc eq, _L74a04788_28
 	ld r0, 10
 	push r0
 	ld r0, 2
 	ld r1, r0
 	pop r0
 	mul r0, r1
-	jmp _L71b64180_29
-_L71b64180_28:
+	jmp _L74a04788_29
+_L74a04788_28:
 	ld r0, 5
-_L71b64180_29:
+_L74a04788_29:
 	push r0
 	call _f_print_int
 	add sp, 2
@@ -156,7 +156,7 @@ _L71b64180_29:
 	push r0
 	call _f_putchar
 	add sp, 2
-	ld r0, _str71b64180_1
+	ld r0, _str74a04788_1
 	push r0
 	call _f_puts
 	add sp, 2
@@ -182,7 +182,7 @@ _g_quadrados:
 	.db 0
 
 ; ----- literais de string -----
-_str71b64180_0:
+_str74a04788_0:
 	.db 109, 111, 100, 111, 32, 100, 101, 98, 117, 103, 32, 108, 105, 103, 97, 100, 111, 0
-_str71b64180_1:
+_str74a04788_1:
 	.db 109, 111, 100, 111, 32, 100, 101, 98, 117, 103, 32, 108, 105, 103, 97, 100, 111, 0
