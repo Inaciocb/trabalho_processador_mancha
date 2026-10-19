@@ -76,3 +76,11 @@ conferimos a contagem contra a CPU, durações de 1, 5 e 30 segundos simulados,
 `n = 1`, `10` e `30`, sementes diferentes e o ciclo completo de 256 valores do
 LCG, incluindo zero. Os exemplos originais `soma`, `conta`, `protecao` e
 `paginacao` também chegaram a `halt`. Nenhuma alteração no simulador foi necessária.
+
+## T2 — implementação de processos
+
+O mini sistema operacional do T2 está em [so/](so/): núcleo em C (mcc) sobre a
+[BIOS](bios_mancha/), com processos, escalonadores simples, round-robin e por
+prioridade, as cinco chamadas de sistema, bloqueio por E/S e por espera,
+preempção pelo relógio, métricas e relatório de execuções. Compilação,
+execução e a análise dos resultados estão em [so/README.md](so/README.md).

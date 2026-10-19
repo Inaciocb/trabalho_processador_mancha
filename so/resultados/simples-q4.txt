@@ -1,0 +1,94 @@
+[SO] iniciando: escalonador simples (parte I), quantum 4, relogio a cada 5000 instr
+
+[SO] cria pid 1 (init) na entrada 0
+init: criando processos
+
+[SO] cria pid 2 (calc) na entrada 1
+
+[SO] cria pid 3 (eco) na entrada 2
+
+[SO] cria pid 4 (misto) na entrada 3
+
+[SO] cria pid 5 (eterno) na entrada 4
+
+[SO] cria pid 6 (invasor) na entrada 5
+init: calc=2 eco=3 misto=4 eterno=5 invasor=6
+init: espera(1, o proprio) = -1
+init: espera(99, inexistente) = -1
+init: cria(programa 42) = -1
+calc: inicio
+calc: 154 primos
+
+[SO] fim pid 2 (calc), entrada 1 livre
+eco: esperando 3 linhas
+eco: OLA
+misto: passo 1
+misto: passo 2
+misto: passo 3
+misto: passo 4
+misto: passo 5
+misto: passo 6
+
+[SO] fim pid 4 (misto), entrada 3 livre
+init: espera(misto) = 0
+
+[SO] fim pid 5 (eterno), entrada 4 livre
+init: mata(eterno) = 0
+init: espera(eterno, ja morto) = -1
+init: espera(calc) = -1
+invasor: tentando E/S direta
+
+[SO] processo 6 (invasor) morto: instrucao privilegiada em ip=5A76
+
+[SO] fim pid 6 (invasor), entrada 5 livre
+eco: MUNDO
+eco: FIM
+
+[SO] fim pid 3 (eco), entrada 2 livre
+init: espera(eco) = 0
+
+[SO] cria pid 7 (ola) na entrada 1
+init: ola=7
+ola: processo novo numa entrada reaproveitada
+
+[SO] fim pid 7 (ola), entrada 1 livre
+init: espera(ola) = 0
+init: fim
+
+[SO] fim pid 1 (init), entrada 0 livre
+
+================ METRICAS DO SO ================
+escalonador: simples (parte I), quantum 4 x 5000 instr, E/S bloqueante
+processos criados: 7
+tempo total:       2060665 instr
+tempo ocioso:      1199020 instr
+preempcoes:        0
+interrupcoes:
+  instrucao privilegiada        1
+  chamada de sistema          621
+  console                       3
+  relogio                     412
+chamadas: le 14, escreve 587, cria 7, mata 6, espera 7
+
+pid programa  retorno preemp  resp.media (n)
+  1 init      2060616      0           0 (3)
+  2 calc       308261      0           - (0)
+  3 eco       1992260      0           0 (2)
+  4 misto      639336      0           - (0)
+  5 eterno     655841      0           - (0)
+  6 invasor    760324      0           - (0)
+  7 ola         25188      0           - (0)
+
+            vezes em estado     tempo em estado (instr)
+pid programa pron bloq exec     pronto  bloqueado   executando
+  1 init        4    3    4          0    1849745       210871
+  2 calc        1    0    1      66271          0       241990
+  3 eco         3    2    3     306276    1642896        43088
+  4 misto       1    0    1     320938          0       318398
+  5 eterno      1    0    0     655841          0            0
+  6 invasor     1    0    1     731761          0        28563
+  7 ola         1    0    1       6502          0        18686
+================================================
+[executor] halt apos 2119872 instrucoes
+[executor] nucleo 678804, ocioso 978916, usuario 462152 instrucoes
+[executor] maior trecho continuo no nucleo: 3801 instrucoes (inicializacao: 3891)
