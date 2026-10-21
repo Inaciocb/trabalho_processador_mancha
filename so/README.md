@@ -36,6 +36,7 @@ Arquivos criados nesta entrega (tudo em `so/`):
 | `usuario/programas.c` | programas de teste e a tabela de programas |
 | `ferramentas/executor.c` | roda um `.mob` sem a interface curses (para execuções longas e para o relatório) |
 | `relatorio.sh` | roda as configurações do relatório e gera `resultados/` |
+| `tests/` | testes nativos (GCC) da lógica do núcleo, com portas e ponte simuladas |
 | `resultados/` | saída de cada configuração e `resumo.txt` |
 
 Mudanças fora de `so/`:
@@ -114,12 +115,18 @@ Como os pontos de entrada chegam até ela:
 | relógio | handler da BIOS → `retomada_escalonador` → `_so_entrada_relogio` | 10 |
 | console | quadro 8 do vetor, reapontado para `_so_entrada_console` | 8 |
 | exceções 1–5 | quadros 1–5 do vetor, reapontados | 1–5 |
+| `trap 0` | quadro 0 do vetor, reapontado depois do boot | 0 |
 
 O relógio e as chamadas de sistema usam os ganchos que a BIOS oferece. A
 console e as exceções foram reapontadas no próprio vetor por dois motivos. O
 núcleo precisa saber da chegada de caracteres para desbloquear quem espera
 entrada. E uma exceção num processo de usuário deve matar só aquele
 processo, não parar a máquina (a BIOS só imprime a exceção e para).
+
+O quadro 0 só serve para o boot (aponta para `_start`), mas `trap` aceita
+qualquer quadro: sem reapontá-lo, um processo de usuário que executasse
+`trap 0` reiniciaria o SO inteiro em modo supervisor. Depois do boot ele é
+tratado como as exceções: mata só o processo.
 
 ### Nenhum processo em execução
 
@@ -141,7 +148,12 @@ Agora:
   gravam resultados direto ali;
 - o contexto só vai para a tabela quando o processo sai da CPU
   (`tira_da_cpu`, ao bloquear ou ser preemptado);
-- o contexto só volta da tabela quando **outro** processo entra (`despacha`);
+- o contexto só volta da tabela quando **outro** processo entra (`despacha`),
+  ou quando o próprio interrompido saiu da CPU nesta entrada e foi escolhido
+  de novo (`tira_da_cpu` marca `interrompido = -2`). Isso cobre o caso em
+  que ele bloqueia em `SO_LE` e as pendências o desbloqueiam na mesma
+  entrada, porque um caractere chegou nesse meio-tempo: o caractere foi
+  gravado no `r0` da tabela, e é essa cópia que precisa voltar;
 - `trata_pendencias` só percorre a tabela se há alguém bloqueado em E/S.
 
 Com isso (e com a impressão do núcleo passando a usar as rotinas da BIOS),
@@ -166,7 +178,7 @@ completos mais o contador. Dois detalhes:
 não for, o contador vira duas vezes com interrupções desligadas, uma
 interrupção se perde, e o tempo fica subcontado (é a "pegadinha" descrita
 no README da BIOS). O executor mede esse trecho. Nas execuções do relatório
-o maior foi de 3923 instruções; daí o padrão de 5000.
+o maior foi de 3927 instruções; daí o padrão de 5000.
 
 ## Parte I — processos
 
@@ -194,8 +206,10 @@ chamada `SO_MATA_PROC(0)`.
 - `trata_pendencias`, chamada em toda entrada no núcleo, completa a
   operação de quem estava bloqueado e o desbloqueia. O resultado vai para o
   `r0` salvo na tabela, que o processo vê quando voltar a rodar.
-- A interrupção da console esvazia a porta num buffer de 32 caracteres (uma
-  interrupção pode representar vários caracteres).
+- A interrupção da console transfere a entrada para um buffer de 32 caracteres.
+  Se ele encher, o restante fica no dispositivo para as próximas leituras ou
+  pendências, sem descarte pelo núcleo. O buffer do dispositivo também é finito;
+  entradas que excedam sua capacidade ainda podem ser perdidas pelo simulador.
 - `SO_ESPERA_PROC(pid)` bloqueia até `pid` morrer. Devolve -1 sem bloquear
   se `pid` não existe ou é o próprio chamador. Ao matar um processo,
   `mata_processo` acorda quem esperava por ele, com `r0 = 0`.
@@ -286,11 +300,13 @@ executável). O cenário de teste:
   caractere por chamada, e podem ser preemptados no meio de uma linha. Por
   isso as linhas de processos diferentes aparecem misturadas.
 - **Limites**: 8 processos simultâneos, pilha de 512 bytes por processo,
-  métricas para os 24 primeiros processos, contadores de 16 bits (até
+  24 processos criados por execução, incluindo o init (`SO_CRIA_PROC` retorna
+  -1 ao atingir esse limite, preservando as métricas de todos os processos
+  aceitos e evitando reutilização de PID), contadores de 16 bits (até
   32767 chamadas/interrupções de cada tipo), quantum até 32.
 - **Fim do sistema** quando o init morre: processos ainda vivos aparecem
   como `(vivo)` nas métricas.
-- **O custo do núcleo é alto** (30–55% das instruções, conforme a
+- **O custo do núcleo é alto** (29–57% das instruções, conforme a
   configuração), porque o mcc não otimiza nada e cada caractere escrito é
   uma chamada de sistema. A impressão do núcleo usa `bios_putc`/
   `bios_imprime`, bem mais baratas que o mesmo laço em C.
@@ -304,15 +320,15 @@ completas em [`resultados/`](resultados/).
 
 ```
 config             total    ocioso preemp nucleo%  ret.calc ret.misto  resp.eco resp.init
-simples-q4       2060665   1199020      0   32.0%    308261    639336         0         0
-rr-q4            2060777    703277     60   35.1%   1062021   1142281     43430      7728
-prio-q4          2061167    697571     59   37.0%   1094355   1180501     11713         0
-rr-q1            2066216    347370    316   50.8%   1444705   1491492     11548      1134
-rr-q16           2060739    900953     10   28.3%    839671    893829     98331     29039
-prio-q1          2067078    223015    341   56.3%   1509961   1635485      2503         0
-prio-q16         2061092    938956      9   30.2%    865090    931805     28062      3415
-rr-q2-i10000     2059105    788765     57   28.7%    982956   1059981     43450      6595
-rr-q4-semblq     2058991         0     63   66.1%   1126821   1151313         -     12203
+simples-q4       2060816   1194141      0   32.4%    308256    641429         0         0
+rr-q4            2060928    696131     60   35.5%   1070079   1147380     43404      7702
+prio-q4          2061243    691046     60   37.6%   1095714   1185224      7132         0
+rr-q1            2066263    332606    319   51.5%   1451350   1504919     10022      1140
+rr-q16           2060865    898566     10   28.6%    840180    896210     98305     28288
+prio-q1          2067300    206127    344   57.1%   1526456   1649690      2507         0
+prio-q16         2061138    940275      9   30.5%    866344    934297     28878      3476
+rr-q2-i10000     2059131    797575     55   29.2%   1000881   1049326     40043      6934
+rr-q4-semblq     2058765         0     63   66.1%   1126829   1150892         -     12329
 ```
 
 (`q` = quantum em interrupções; intervalo de 5000 instruções, exceto em
@@ -324,7 +340,7 @@ configurações é como esse tempo é dividido: tempo ocioso, de retorno e de
 resposta.
 
 **Simples × preemptivos.** Sem preempção, o `calc` roda até o fim de uma
-vez (retorno de 308 mil, contra cerca de 1 milhão no round-robin), mas o
+vez (retorno de 308 mil, contra 1,07 milhão no round-robin), mas o
 `eterno` nunca ganha a CPU: fica atrás na tabela e é morto ainda pronto
 (0 instruções executadas). O `eco` tem resposta 0 por sorte do cenário: ele
 só é acordado quando quem roda acabou de bloquear ou morrer. Se um processo
@@ -333,30 +349,47 @@ limitado por CPU estivesse rodando sem nunca bloquear, ninguém mais rodaria.
 **Round-robin × prioridade.** O efeito pedido aparece no `eco`: com
 prioridade, ele usa pouco de cada quantum (bloqueia logo), sua `prio` cai e
 ele passa na frente quando acorda. Com quantum 4, a resposta média cai de
-43.430 para 11.713 instruções; com quantum 1, de 11.548 para 2.503. O custo
+43.404 para 7.132 instruções; com quantum 1, de 10.022 para 2.507. O custo
 fica com os limitados por CPU: o retorno do `calc` e do `misto` sobe um
-pouco (≈3%).
+pouco (2–3% com quantum 4).
 
 **Tamanho do quantum.** Quantum menor dá respostas melhores (o `eco` com
-q1 responde em 11,5 mil contra 98 mil com q16), mas multiplica as
-preempções (316 contra 10) e o custo do núcleo (50,8% contra 28,3%). O
-retorno dos limitados por CPU piora (`calc`: 1,44 milhão contra 840 mil). O
+q1 responde em 10 mil contra 98 mil com q16), mas multiplica as
+preempções (319 contra 10) e o custo do núcleo (51,5% contra 28,6%). O
+retorno dos limitados por CPU piora (`calc`: 1,45 milhão contra 840 mil). O
 "tempo ocioso" também cai com quantum menor, mas não porque a CPU foi mais
 bem usada: o núcleo passa a ocupar o tempo que antes sobrava.
 
 **Intervalo do relógio.** `rr-q2-i10000` tem a mesma fatia de tempo que
 `rr-q4` (20.000 instruções), com metade das interrupções de relógio. O
-núcleo cai de 35,1% para 28,7%, e o `calc` termina antes (983 mil contra
-1,06 milhão). A resposta do `eco` não muda, porque ela depende do tamanho
-da fatia, não do número de tiques.
+núcleo cai de 35,5% para 29,2%, e o `calc` termina antes (1,00 milhão
+contra 1,07 milhão). A resposta do `eco` quase não muda (40 mil contra
+43 mil), porque ela depende do tamanho da fatia, não do número de tiques.
 
 **Bloqueio × espera ocupada.** Sem bloqueio (`rr-q4-semblq`), o `eco` fica
-chamando `SO_LE` em laço: 3350 chamadas de leitura contra 14, núcleo em
+chamando `SO_LE` em laço: 3200 chamadas de leitura contra 14, núcleo em
 66,1% e tempo ocioso zero. A CPU está ocupada o tempo todo, mas sem fazer
 nada útil — é exatamente o desperdício que a Parte II elimina. O `eco` nunca
 bloqueia, então não tem tempo de resposta (`-`).
 
 ## Validação
+
+Testes de regressão da lógica do núcleo, com portas e ponte simuladas
+(requer GCC; não usa o mcc), a partir de `so/`:
+
+```sh
+gcc -std=gnu11 -Wno-pointer-to-int-cast -Itests tests/nucleo.c -o /tmp/teste-nucleo
+/tmp/teste-nucleo
+```
+
+Eles verificam entrada de 100 caracteres preservada em ordem, recusa de
+criação após esgotar os registros sem perder métricas anteriores, bloqueio
+e conclusão de escrita quando o dispositivo volta a ficar pronto, e uma
+leitura que bloqueia e é completada pelas pendências na mesma entrada no
+núcleo (o processo, escolhido de novo, recebe o caractere). Não substituem
+a execução da imagem no Mancha. O relatório interrompe se o executor
+falhar, se não houver `halt` e métricas ou se houver pânico. Os resultados
+em `resultados/` foram gerados com o núcleo atual.
 
 - As 9 execuções do relatório terminam com o init morrendo, a impressão das
   métricas e `halt`. Em todas, para cada processo,
@@ -370,6 +403,9 @@ bloqueia, então não tem tempo de resposta (`-`).
   para um processo que já morreu; `SO_CRIA_PROC` devolve -1 para um programa
   inexistente; `SO_MATA_PROC` de outro processo (`eterno`) funciona e
   acorda quem esperava.
+- Com o `out` do `invasor` trocado por `trap 0` (teste avulso, fora do
+  cenário do relatório), ele é morto com `trap 0 (boot)` e o SO continua,
+  sem reiniciar.
 - A mesma imagem roda no simulador interativo (curses) até as métricas e o
   `halt`, com a entrada digitada pelo operador (`E<texto>`).
 - O maior trecho contínuo no núcleo ficou abaixo de 4000 instruções em todas
