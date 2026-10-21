@@ -264,8 +264,8 @@ void k_str_col(char *s, int largura)
 }
 
 // Entrada: a interrupção da console chega uma vez mesmo que vários
-// caracteres tenham chegado juntos. Quando o buffer enche, deixa o restante
-// no dispositivo: as próximas leituras/pendências voltam a drenar a porta.
+// caracteres tenham chegado juntos, então o núcleo esvazia a porta toda num
+// buffer próprio.
 char buf_entrada[32];
 int buf_ini;
 int buf_n;
@@ -273,10 +273,12 @@ int buf_n;
 void console_drena(void)
 {
     int c;
-    while (buf_n < 32 && (porta_le(2) & 2) != 0) {
+    while ((porta_le(2) & 2) != 0) {
         c = porta_le(1) & 255;
-        buf_entrada[(buf_ini + buf_n) % 32] = c;
-        buf_n = buf_n + 1;
+        if (buf_n < 32) {
+            buf_entrada[(buf_ini + buf_n) % 32] = c;
+            buf_n = buf_n + 1;
+        }
     }
 }
 
@@ -341,9 +343,7 @@ int atual;            // índice do processo em execução; -1 = nenhum
 // quando outro processo entra (despacha). Isso evita duas cópias de 16
 // palavras na maioria das entradas.
 int *regs;
-// atual no momento da entrada; -1 = ocioso; -2 = quadro vivo sem dono (boot,
-// ou o interrompido já saiu da CPU e seu contexto oficial está na tabela)
-int interrompido;
+int interrompido;     // atual no momento da entrada; -1 = ocioso; -2 = boot
 
 int n_bloq_es;        // processos bloqueados em E/S (para pular pendências)
 int proximo_pid;
@@ -450,10 +450,6 @@ int busca_pid(int pid)
 void tira_da_cpu(void)
 {
     copia_quadro(regs, tabela[atual].quadro);
-    // Daqui em diante vale a cópia da tabela: se ele for desbloqueado nesta
-    // mesma entrada (resultado gravado lá) e escolhido de novo, despacha
-    // precisa copiá-la de volta para o quadro vivo.
-    interrompido = -2;
 #if ESCALONADOR == 3
     int t_exec;
     t_exec = QUANTUM - quantum_restante;
@@ -505,11 +501,6 @@ int cria_processo(int prog)
     if (entrada == 0) {
         return -1;
     }
-    // Preserva as métricas de todos os processos aceitos até o fim.
-    // O limite total também impede a reutilização do pid de 16 bits.
-    if (n_registros >= MAX_REG) {
-        return -1;
-    }
     i = 0;
     while (i < MAX_PROC && tabela[i].estado != P_LIVRE) {
         i = i + 1;
@@ -539,14 +530,17 @@ int cria_processo(int prog)
     p->arg = 0;
     p->prio = 500;
     p->mede_resposta = 0;
+    p->reg = -1;
     le_agora();
-    p->reg = n_registros;
-    r = &registros[n_registros];
-    n_registros = n_registros + 1;
-    r->pid = p->pid;
-    r->prog = prog;
-    r->criacao = agora;
-    r->entradas[P_PRONTO] = 1;
+    if (n_registros < MAX_REG) {
+        p->reg = n_registros;
+        r = &registros[n_registros];
+        n_registros = n_registros + 1;
+        r->pid = p->pid;
+        r->prog = prog;
+        r->criacao = agora;
+        r->entradas[P_PRONTO] = 1;
+    }
     p->estado = P_PRONTO;
     p->t_estado = agora;
     enfileira(i);
@@ -702,7 +696,6 @@ void trata_chamada(void)
 
 char *nome_irq(int irq)
 {
-    if (irq == 0) return "trap 0 (boot)";
     if (irq == 1) return "violacao de segmento";
     if (irq == 2) return "instrucao privilegiada";
     if (irq == 3) return "divisao por zero";

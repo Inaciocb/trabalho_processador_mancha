@@ -16,16 +16,16 @@ ando 3 lin
 inithas
 invas: caor: tlc=2entan ecodo E/=3 mS diristoeta
 
-[SO] processo 6 (invasor) morto: instrucao privilegiada em ip=5BC8
+[SO] processo 6 (invasor) morto: instrucao privilegiada em ip=5B4E
 
 [SO] fim pid 6 (invasor), entrada 5 livre
 =4 eterno=5 invasor=6
-misto: paeco: Oinit: espsso 1
+imisto: paseco: Onit: espeso 1
 LA
-era(1, o proprio) = -1
-init: espera(99, inexistenmte) =isto: -1
- passinito 2
-: cria(programa 42) = -1
+ra(1, o proprio) = -1
+init: espera(99, inexistentme) = isto:-1
+i passnit: o 2
+cria(programa 42) = -1
 misto: passo 3
 eco: MUNDO
 misto: passo 4
@@ -60,35 +60,35 @@ init: fim
 ================ METRICAS DO SO ================
 escalonador: round-robin, quantum 1 x 5000 instr, E/S bloqueante
 processos criados: 7
-tempo total:       2066263 instr
-tempo ocioso:      332606 instr
-preempcoes:        319
+tempo total:       2066216 instr
+tempo ocioso:      347370 instr
+preempcoes:        316
 interrupcoes:
   instrucao privilegiada        1
   chamada de sistema          621
-  console                       2
+  console                       3
   relogio                     413
 chamadas: le 14, escreve 587, cria 7, mata 6, espera 7
 
 pid programa  retorno preemp  resp.media (n)
-  1 init      2066214     41        1140 (3)
-  2 calc      1451350     83           - (0)
-  3 eco       1992245      4       10022 (3)
-  4 misto     1504919     89           - (0)
-  5 eterno    1557846     95           - (0)
-  6 invasor    143391      5           - (0)
-  7 ola         25554      2           - (0)
+  1 init      2066167     40        1134 (3)
+  2 calc      1444705     83           - (0)
+  3 eco       1992180      4       11548 (3)
+  4 misto     1491492     88           - (0)
+  5 eterno    1544371     94           - (0)
+  6 invasor    143318      5           - (0)
+  7 ola         25539      2           - (0)
 
             vezes em estado     tempo em estado (instr)
 pid programa pron bloq exec     pronto  bloqueado   executando
-  1 init       45    3   45     561521    1161081       343612
-  2 calc       84    0   84    1056845          0       394505
-  3 eco         8    3    8      99456    1849566        43223
-  4 misto      90    0   90    1061381          0       443538
-  5 eterno     96    0   95    1094169          0       463677
-  6 invasor     6    0    6     114818          0        28573
-  7 ola         3    0    3       9074          0        16480
+  1 init       44    3   44     546911    1180856       338400
+  2 calc       84    0   84    1049692          0       395013
+  3 eco         8    3    8     104117    1844955        43108
+  4 misto      89    0   89    1052376          0       439116
+  5 eterno     95    0   94    1085765          0       458606
+  6 invasor     6    0    6     115231          0        28087
+  7 ola         3    0    3       9072          0        16467
 ================================================
-[executor] halt apos 2128206 instrucoes
-[executor] nucleo 1096068, ocioso 290464, usuario 741674 instrucoes
-[executor] maior trecho continuo no nucleo: 3738 instrucoes (inicializacao: 3821)
+[executor] halt apos 2128171 instrucoes
+[executor] nucleo 1081791, ocioso 304182, usuario 742198 instrucoes
+[executor] maior trecho continuo no nucleo: 3714 instrucoes (inicializacao: 3826)

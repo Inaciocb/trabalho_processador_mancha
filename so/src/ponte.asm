@@ -12,7 +12,6 @@
 ; contexto interrompido (pilha_sistema-32). A função C grava ali o contexto
 ; do processo escolhido, e o "rete" seguinte o retoma.
 
-        .equ    IRQ_TRAP0     = 0
         .equ    IRQ_SEG       = 1
         .equ    IRQ_PRIV      = 2
         .equ    IRQ_DIV0      = 3
@@ -41,14 +40,10 @@ _ki_laco_sc:
         cmp     r2, 0
         jmpc    ne, _ki_laco_sc
 
-        ; campo "ip" dos quadros 0-5 e 8 do vetor (endereço = número * 8):
+        ; campo "ip" dos quadros 1-5 e 8 do vetor (endereço = número * 8):
         ; exceções passam a matar só o processo culpado, e a console passa a
         ; ser tratada pelo núcleo (que precisa saber da chegada de caracteres
-        ; para desbloquear processos). O quadro 0 só serve para o boot, que
-        ; já passou: depois dele, um "trap 0" de usuário reiniciaria o SO em
-        ; modo supervisor, então passa a ser tratado como exceção.
-        ld      r0, _so_entrada_trap0
-        st      r0, (0)
+        ; para desbloquear processos)
         ld      r0, _so_entrada_seg
         st      r0, (8)
         ld      r0, _so_entrada_priv
@@ -77,9 +72,6 @@ _ki_laco_sc:
 ;
 ; Chegam aqui com sp = quadro (vetor direto, ou o "jmp" do relógio da BIOS).
 
-_so_entrada_trap0:
-        ld      r0, IRQ_TRAP0
-        jmp     _so_entrada_comum
 _so_entrada_seg:
         ld      r0, IRQ_SEG
         jmp     _so_entrada_comum

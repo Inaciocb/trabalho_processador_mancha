@@ -14,23 +14,23 @@ calc: inicio
 eco: esperando 3 linhas
 
 [SO] cria pid 6 (invasor) na entrada 5
-init: calc=2 eco=3invasor: tentando E/S direta
+init: calc=2 eco=3 invasor: tentando E/S direta
 
-[SO] processo 6 (invasor) morto: instrucao privilegiada em ip=5D4C
+[SO] processo 6 (invasor) morto: instrucao privilegiada em ip=5CD2
 
 [SO] fim pid 6 (invasor), entrada 5 livre
- misto=4 eternomisto: passo 1
-=5 invasor=6
-init: eseco: OLA
-pera(1, o proprio) = -1
-init: espera(99, inmisto: passo 2
-existente) = -1
+misto=4 eterno=5misto: passo 1
+ invasor=6
+init: espeeco: OLA
+ra(1, o proprio) = -1
+init: espera(99, inexismisto: passo 2
+tente) = -1
 init: cria(programa 42) = -1
 misto: passo 3
 misto: passo 4
 eco: MUNDO
-miscalc: 154 primoto: passo 5
-s
+mistocalc: 154 p: passo 5
+rimos
 
 [SO] fim pid 2 (calc), entrada 1 livre
 misto: passo 6
@@ -60,9 +60,9 @@ init: fim
 ================ METRICAS DO SO ================
 escalonador: prioridade, quantum 4 x 5000 instr, E/S bloqueante
 processos criados: 7
-tempo total:       2061243 instr
-tempo ocioso:      691046 instr
-preempcoes:        60
+tempo total:       2061167 instr
+tempo ocioso:      697571 instr
+preempcoes:        59
 interrupcoes:
   instrucao privilegiada        1
   chamada de sistema          622
@@ -71,24 +71,24 @@ interrupcoes:
 chamadas: le 14, escreve 588, cria 7, mata 6, espera 7
 
 pid programa  retorno preemp  resp.media (n)
-  1 init      2061194     10           0 (2)
-  2 calc      1095714     15           - (0)
-  3 eco       1992301      0        7132 (3)
-  4 misto     1185224     17           - (0)
-  5 eterno    1209402     17           - (0)
-  6 invasor    105983      1           - (0)
-  7 ola         24672      0           - (0)
+  1 init      2061118      9           0 (2)
+  2 calc      1094355     15           - (0)
+  3 eco       1992186      0       11713 (3)
+  4 misto     1180501     17           - (0)
+  5 eterno    1204129     17           - (0)
+  6 invasor    105871      1           - (0)
+  7 ola         24678      0           - (0)
 
             vezes em estado     tempo em estado (instr)
 pid programa pron bloq exec     pronto  bloqueado   executando
-  1 init       13    2   13     540298    1221897       298999
-  2 calc       16    0   16     797788          0       297926
-  3 eco         4    3    4      46478    1911740        34083
-  4 misto      18    0   18     832700          0       352524
-  5 eterno     18    0   17     870597          0       338805
-  6 invasor     2    0    2      77028          0        28955
-  7 ola         1    0    1       5816          0        18856
+  1 init       12    2   12     478718    1289613       292787
+  2 calc       16    0   16     796621          0       297734
+  3 eco         4    3    4      60208    1893114        38864
+  4 misto      18    0   18     832283          0       348218
+  5 eterno     18    0   17     865526          0       338603
+  6 invasor     2    0    2      77386          0        28485
+  7 ola         1    0    1       5822          0        18856
 ================================================
-[executor] halt apos 2122567 instrucoes
-[executor] nucleo 797563, ocioso 598150, usuario 726854 instrucoes
-[executor] maior trecho continuo no nucleo: 3922 instrucoes (inicializacao: 3873)
+[executor] halt apos 2122216 instrucoes
+[executor] nucleo 784480, ocioso 605847, usuario 731889 instrucoes
+[executor] maior trecho continuo no nucleo: 3923 instrucoes (inicializacao: 3878)
