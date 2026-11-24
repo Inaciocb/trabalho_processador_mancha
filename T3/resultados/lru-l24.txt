@@ -1,0 +1,150 @@
+[SO] iniciando: escalonador round-robin, quantum 4, relogio a cada 10000 instr
+[SO] memoria: codigo por demanda, substituicao LRU; quadros 61..103 livres para processos, limite 24
+
+[SO] cria pid 1 (init) na entrada 0, quadros livres 18
+init: criando processos
+
+[SO] cria pid 2 (calc) na entrada 1, quadros livres 11
+
+[SO] cria pid 3 (calc) na entrada 2, quadros livres 7
+calc: inicio
+calc: inicio
+
+[SO] cria pid 4 (eco) na entrada 3, quadros livres 0
+
+[SO] cria pid 5 (misto) na entrada 4, quadros livres 0
+init: calc=2eco: esperando 3 linhas
+eco: OLA
+eco: MUNDO
+eco: FIM
+
+[SO] fim pid 4 (eco), entrada 3 livre, 6 quadros devolvidos
+,3 eco=4 misto=5
+init: espera(1, o proprio) = -1
+init: espera(99, inexistente) = -1misto: passo 1
+
+init: cria(programa 42) = -1
+misto: passo 2
+misto: passo 3
+misto: passo 4
+calc: 154 primos, contador no endereco virtual 0800
+
+[SO] fim pid 2 (calc), entrada 1 livre, 8 quadros devolvidos
+calc: 154 primos, contador no endereco virtual mist0800
+
+[SO] fim pid 3 (calc), entrada 2 livre, 8 quadros devolvidos
+o: passo 5
+misto: passo 6
+
+[SO] fim pid 5 (misto), entrada 4 livre, 7 quadros devolvidos
+init: espera(misto) = 0
+init: espera(calc) = -1
+init: espera(calc) = -1
+init: espera(eco) = -1
+
+[SO] cria pid 6 (eterno) na entrada 1, quadros livres 9
+
+[SO] cria pid 7 (invasor) na entrada 2, quadros livres 5
+
+[SO] cria pid 8 (paginas) na entrada 3, quadros livres 1
+init: eterno=6 invasor=7 painvasor: tentando E/S direta
+
+[SO] processo 7 (invasor) morto: instrucao privilegiada em ip=01B2
+
+[SO] fim pid 7 (invasor), entrada 2 livre, 5 quadros devolvidos
+paginas: inicio
+ginas=8
+paginas: resultado 201
+
+[SO] fim pid 8 (paginas), entrada 3 livre, 13 quadros devolvidos
+init: espera(paginas) = 0
+
+[SO] fim pid 6 (eterno), entrada 1 livre, 5 quadros devolvidos
+init: mata(eterno) = 0
+init: espera(eterno, ja morto) = -1
+init: testes de protecao
+
+[SO] cria pid 9 (escreve_codigo) na entrada 1, quadros livres 9
+escreve_codigo: escrevendo no endereco 0x0010 (codigo)
+
+[SO] processo 9 (escreve_codigo) morto: violacao de protecao em ip=0034
+
+[SO] fim pid 9 (escreve_codigo), entrada 1 livre, 5 quadros devolvidos
+
+[SO] cria pid 10 (le_longe) na entrada 1, quadros livres 9
+le_longe: lendo o endereco 0x7000
+
+[SO] processo 10 (le_longe) morto: ausencia de quadro em ip=002C, pagina 0: acesso a dado fora das areas do processo
+
+[SO] fim pid 10 (le_longe), entrada 1 livre, 5 quadros devolvidos
+
+[SO] cria pid 11 (salta_longe) na entrada 1, quadros livres 9
+salta_longe: chamando o endereco 0x6000
+
+[SO] processo 11 (salta_longe) morto: ausencia de quadro em ip=6000, pagina 48: execucao fora do codigo do programa
+
+[SO] fim pid 11 (salta_longe), entrada 1 livre, 5 quadros devolvidos
+
+[SO] cria pid 12 (ola) na entrada 1, quadros livres 9
+init: ola=12
+ola: processo novo numa entrada reaproveitada
+
+[SO] fim pid 12 (ola), entrada 1 livre, 5 quadros devolvidos
+init: espera(ola) = 0
+init: fim
+
+[SO] fim pid 1 (init), entrada 0 livre, 11 quadros devolvidos
+
+================ METRICAS DO SO ================
+escalonador: round-robin, quantum 4 x 10000 instr, E/S bloqueante
+processos criados: 12
+tempo total:       2106017 instr
+tempo ocioso:      0 instr
+preempcoes:        43
+interrupcoes:
+  violacao de protecao          1
+  instrucao privilegiada        1
+  ausencia de quadro           90
+  chamada de sistema          996
+  console                       1
+  relogio                     210
+chamadas: le 14, escreve 950, cria 12, mata 8, espera 12
+memoria: codigo por demanda, substituicao LRU, 24 quadros para processos (pool de 43 a partir do quadro 61)
+faltas de pagina:  88
+substituicoes:     55
+escritas de volta: 0
+pico de quadros:   24
+quadros livres:    inicio 24, fim 24
+
+pid programa         retorno preemp  resp.media (n) faltas
+  1 init             2105968      4        6536 (6)    37
+  2 calc              852084      6           - (0)     8
+  3 calc              925469      7           - (0)     9
+  4 eco               144039      0           - (0)     8
+  5 misto             878241      6           - (0)     8
+  6 eterno            857802     11           - (0)     1
+  7 invasor            72594      0           - (0)     1
+  8 paginas           793054      9           - (0)    12
+  9 escreve_codigo     26224      0           - (0)     1
+ 10 le_longe            8981      0           - (0)     1
+ 11 salta_longe        21281      0           - (0)     1
+ 12 ola                36958      0           - (0)     1
+
+                   vezes em estado     tempo em estado (instr)
+pid programa        pron bloq exec     pronto  bloqueado   executando
+  1 init              11    6   11     478875    1265222       361871
+  2 calc               7    0    7     578275          0       273809
+  3 calc               8    0    8     646800          0       278669
+  4 eco                1    0    1     114393          0        29646
+  5 misto              7    0    7     586435          0       291806
+  6 eterno            12    0   11     427737          0       430065
+  7 invasor            1    0    1      57674          0        14920
+  8 paginas           10    0   10     427110          0       365944
+  9 escreve_codigo     1    0    1       1987          0        24237
+ 10 le_longe           1    0    1       2478          0         6503
+ 11 salta_longe        1    0    1      12496          0         8785
+ 12 ola                1    0    1      17245          0        19713
+================================================
+[executor] halt apos 2227695 instrucoes
+[executor] nucleo 846190, ocioso 0, usuario 1381505 instrucoes
+[executor] maior trecho continuo no nucleo: 7757 instrucoes (inicializacao: 27071)
