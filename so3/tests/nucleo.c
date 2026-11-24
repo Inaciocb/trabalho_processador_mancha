@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "../src/so.c"
+#include "../src/mem.c"
 
 static int recebidos[100];
 static int leitura;
@@ -29,6 +30,8 @@ void k_putc(int c) { (void)c; }
 void k_puts(char *s) { (void)s; }
 void para(void) { assert(0); }
 void so_ocioso(void) {}
+int fim_nucleo(void) { return 0x7000; }
+void zera_quadro(int q) { (void)q; }
 void fim_processo(void) {}
 int programa_entrada(int prog) { return prog == PROG_INIT ? 1 : 0; }
 char *programa_nome(int prog) { (void)prog; return "teste"; }

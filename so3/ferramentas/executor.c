@@ -129,6 +129,7 @@ int main(int argc, char *argv[])
 
     long trecho = 0, maior_trecho = 0, trecho_inicial = -1;
     long n_nucleo = 0, n_ocioso = 0, n_usuario = 0;
+    unsigned menor_sp = 0xFFFF;
     while (!cpu_parada(cpu) && cpu_num_instrucoes(cpu) < maximo) {
         for (int i = 0; i < n_entradas; i++) {
             if (!entradas[i].feita && cpu_num_instrucoes(cpu) >= entradas[i].instante) {
@@ -149,6 +150,7 @@ int main(int argc, char *argv[])
 
         // classifica a instrução que vai executar a seguir: núcleo (S=1 com
         // interrupções desligadas), laço ocioso (S=1, D=0) ou usuário (S=0)
+        if (cpu_modo_supervisor(cpu) && cpu_r(cpu, 6) >= 0x8000 && cpu_r(cpu, 6) < menor_sp) menor_sp = cpu_r(cpu, 6);
         if (cpu_modo_supervisor(cpu) && cpu_bit(cpu, SR_D)) {
             trecho++;
             n_nucleo++;
@@ -171,6 +173,7 @@ int main(int argc, char *argv[])
             n_nucleo, n_ocioso, n_usuario);
     fprintf(stderr, "[executor] maior trecho continuo no nucleo: %ld instrucoes (inicializacao: %ld)\n",
             maior_trecho, trecho_inicial);
+    fprintf(stderr, "[executor] menor sp nas pilhas da BIOS (>= 0x8000): 0x%04X\n", menor_sp);
 
     cpu_destroi(cpu);
     disp_destroi(disp);          // regrava as cópias temporárias...

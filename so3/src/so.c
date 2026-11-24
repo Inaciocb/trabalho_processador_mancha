@@ -12,9 +12,15 @@
 //   QUANTUM      em interrupções de relógio
 //   INTERVALO    instruções entre interrupções de relógio
 //   BLOQUEIO     1 = E/S bloqueia o processo (parte II), 0 = devolve -1
+//   AUTOTESTE_MEM 1 = testa o gerenciador de quadros no boot
 
 #include "config.h"
 #include "so_chamadas.h"
+#include "mem.h"
+
+#ifndef AUTOTESTE_MEM
+#define AUTOTESTE_MEM 0
+#endif
 
 #define MAX_PROC   8
 #define TAM_PILHA  256
@@ -52,6 +58,8 @@ void k_putc(int c);
 void k_puts(char *s);
 void para(void);
 void so_ocioso(void);
+int fim_nucleo(void);
+void zera_quadro(int q);
 
 // usuario/runtime_so.asm e usuario/programas.c
 void fim_processo(void);
@@ -1029,6 +1037,90 @@ void so_trata_interrupcao(int irq, int *quadro)
 }
 
 // chamada uma vez por _kernel_inicio (ponte.asm), com D=1
+#if AUTOTESTE_MEM
+void autoteste_mem(void)
+{
+    int visto[MAX_QUADROS];
+    int total;
+    int n;
+    int q;
+    int i;
+    int *p;
+
+    total = quadros_livres();
+    for (q = 0; q < MAX_QUADROS; q++) {
+        visto[q] = 0;
+    }
+    n = 0;
+    q = aloca_quadro();
+    while (q >= 0) {
+        if (q < mem_primeiro() || q > mem_ultimo() || visto[q]) {
+            k_puts("[SO] PANICO: autoteste memoria: quadro ");
+            k_int(q);
+            k_puts(" fora da faixa ou repetido\n");
+            para();
+        }
+        visto[q] = 1;
+        n = n + 1;
+        q = aloca_quadro();
+    }
+    if (n != total || quadros_livres() != 0) {
+        k_puts("[SO] PANICO: autoteste memoria: contagem errada\n");
+        para();
+    }
+
+    p = end_quadro(mem_primeiro());
+    for (i = 0; i < TAM_QUADRO / 2; i++) {
+        p[i] = 0x5A5A;
+    }
+    zera_quadro(mem_primeiro());
+    for (i = 0; i < TAM_QUADRO / 2; i++) {
+        if (p[i] != 0) {
+            k_puts("[SO] PANICO: autoteste memoria: zera_quadro\n");
+            para();
+        }
+    }
+
+    for (q = mem_primeiro(); q <= mem_ultimo(); q++) {
+        libera_quadro(q);
+    }
+    if (quadros_livres() != total) {
+        k_puts("[SO] PANICO: autoteste memoria: livres nao voltou ao inicial\n");
+        para();
+    }
+    k_puts("[SO] autoteste memoria: ok (");
+    k_int(n);
+    k_puts(" quadros alocados, zerados e liberados)\n");
+}
+#endif
+
+void inicia_memoria(void)
+{
+    int fim;
+    int primeiro;
+
+    fim = fim_nucleo();
+    primeiro = (fim >> 9) & 127;
+    if (fim & (TAM_QUADRO - 1)) {
+        primeiro = primeiro + 1;
+    }
+    if (primeiro >= QUADRO_LIMITE) {
+        k_puts("[SO] PANICO: o nucleo invade a area das pilhas\n");
+        para();
+    }
+    mem_inicia(primeiro, QUADRO_LIMITE - 1);
+    k_puts("[SO] memoria: quadros ");
+    k_int(mem_primeiro());
+    k_puts(" a ");
+    k_int(mem_ultimo());
+    k_puts(" livres (");
+    k_int(quadros_livres());
+    k_puts(" quadros de 512 bytes)\n");
+#if AUTOTESTE_MEM
+    autoteste_mem();
+#endif
+}
+
 void so_inicia(int *quadro)
 {
     int i;
@@ -1063,6 +1155,7 @@ void so_inicia(int *quadro)
     k_puts(", relogio a cada ");
     k_int(INTERVALO);
     k_puts(" instr\n");
+    inicia_memoria();
 
     if (cria_processo(PROG_INIT) < 0) {
         k_puts("[SO] PANICO: nao foi possivel criar o init\n");

@@ -192,6 +192,32 @@ _f_k_puts:
         pop     bp
         ret
 
+; int fim_nucleo(void) -- endereço logo depois da imagem do núcleo
+_f_fim_nucleo:
+        ld      r0, _fim_nucleo
+        ret
+
+; void zera_quadro(int q) -- 512 bytes, 4 palavras por volta
+_f_zera_quadro:
+        push    bp
+        ld      bp, sp
+        ld      r1, (bp+4)
+        shl     r1, 9
+        ld      r2, 0
+        ld      r3, 64
+_zq_laco:
+        st      r2, (r1)
+        st      r2, (r1+2)
+        st      r2, (r1+4)
+        st      r2, (r1+6)
+        add     r1, 8
+        add     r3, -1
+        cmp     r3, 0
+        jmpc    ne, _zq_laco
+        ld      sp, bp
+        pop     bp
+        ret
+
 ; void para(void)
 _f_para:
         halt
