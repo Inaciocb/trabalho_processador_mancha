@@ -1,0 +1,4 @@
+#define ESCALONADOR 3
+#define QUANTUM 4
+#define INTERVALO 5000
+#define BLOQUEIO 1
