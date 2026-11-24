@@ -1,9 +1,13 @@
-# Makefile do mini SO do T2.
+# Makefile do mini SO do T3 (partiu do SO do T2).
 #
 #   make                         monta build/so.mob com a configuração padrão
+#                                e o disco com os programas de usuário
 #   make ESCALONADOR=3 QUANTUM=2 escolhe outra configuração
 #   make roda                    roda sem interface (ferramentas/executor)
 #   make relatorio               roda as configurações do relatório
+#   make disco                   só o disco: build/usuario/disco.img e
+#                                build/usuario/programas_disco.h
+#   make confere-disco           confere o disco contra as imagens
 #
 # ESCALONADOR: 1 = simples (parte I), 2 = round-robin, 3 = prioridade
 # QUANTUM:     em interrupções de relógio (até 32)
@@ -25,15 +29,22 @@ MONTADOR = $(RAIZ)/simulador_completo/bin/montador
 BIOS     = $(RAIZ)/bios_mancha/src/bios.asm
 BIBLIO   = $(RAIZ)/compilador_c/rt/biblioteca.asm
 SIM_SRC  = $(RAIZ)/simulador_completo/src
+MOB2BIN  = $(RAIZ)/simulador_completo/bin/mob2bin
 EXECUTOR = bin/executor
 
 # cada configuração tem seu diretório: trocar de configuração nunca reusa
 # um núcleo compilado com outra
 CFG = build/e$(ESCALONADOR)-q$(QUANTUM)-i$(INTERVALO)-b$(BLOQUEIO)
 
-.PHONY: all roda relatorio clean FORCE
+# programas de usuário, na ordem dos PROG_* de src/so_chamadas.h (o
+# gera_disco.sh confere)
+PROGRAMAS = init calc eco misto eterno invasor ola
+UDIR      = build/usuario
+DISCO     = $(UDIR)/disco.img
 
-all: build/so.mob $(EXECUTOR)
+.PHONY: all roda relatorio disco confere-disco clean FORCE
+
+all: build/so.mob $(EXECUTOR) disco
 
 # atalho para a configuração pedida nesta chamada (recopiado sempre: a data
 # não diz de qual configuração ele veio)
@@ -54,6 +65,33 @@ build/programas.asm: usuario/programas.c usuario/so.h src/so_chamadas.h
 
 $(CFG)/so.mob: $(BIOS) src/ponte.asm $(CFG)/so.asm usuario/runtime_so.asm $(BIBLIO) build/programas.asm
 	$(MONTADOR) $(BIOS) src/ponte.asm $(CFG)/so.asm usuario/runtime_so.asm $(BIBLIO) build/programas.asm -o $@
+
+# ---- programas de usuário: cada um compilado e montado sozinho, a partir
+# do endereço 0 (entrada.asm primeiro, fim.asm por último)
+
+$(UDIR)/%.asm: usuario/%.c usuario/lib_usuario.c usuario/so.h src/so_chamadas.h
+	@mkdir -p $(UDIR)
+	$(MCC) -I$(RAIZ)/compilador_c/inc -Isrc -Iusuario $< -o $@
+
+$(UDIR)/%.mob: usuario/entrada.asm usuario/runtime_so.asm $(BIBLIO) $(UDIR)/%.asm usuario/fim.asm
+	$(MONTADOR) $^ -o $@
+
+# imagem crua de 64 KB; o gera_disco.sh corta no tamanho que a capa informa
+$(UDIR)/%.full: $(UDIR)/%.mob
+	$(MOB2BIN) $< 65536 $@
+
+$(DISCO): ferramentas/gera_disco.sh src/so_chamadas.h $(PROGRAMAS:%=$(UDIR)/%.full)
+	sh ferramentas/gera_disco.sh src/so_chamadas.h $(UDIR) $(PROGRAMAS)
+
+$(UDIR)/programas_disco.h: $(DISCO)
+
+disco: $(DISCO)
+
+confere-disco: $(DISCO)
+	sh ferramentas/confere_disco.sh $(UDIR) $(PROGRAMAS)
+
+# os .asm/.mob/.full intermediários ficam (úteis para depurar)
+.SECONDARY:
 
 $(EXECUTOR): ferramentas/executor.c $(SIM_SRC)/cpu.c $(SIM_SRC)/dispositivos.c $(SIM_SRC)/memoria.c $(SIM_SRC)/objeto.c $(SIM_SRC)/instrucao.c
 	@mkdir -p bin

@@ -1,14 +1,15 @@
 # Makefile de nível superior: compila o simulador do Mancha completo,
-# depois o compilador C, depois a BIOS de brinquedo, depois o SO do T2 --
-# nessa ordem, porque compilador_c usa o montador de simulador_completo/bin/,
-# e bios_mancha e so usam TANTO esse montador QUANTO o mcc de
-# compilador_c/bin/ (o exemplo bios_mancha/exemplos/multitarefa_c/ e o
-# núcleo do SO são escritos em C, compilados pelo mcc).
+# depois o compilador C, depois a BIOS de brinquedo, depois o SO do T2 e o
+# do T3 -- nessa ordem, porque compilador_c usa o montador de
+# simulador_completo/bin/, e bios_mancha, so e so3 usam TANTO esse montador
+# QUANTO o mcc de compilador_c/bin/ (o exemplo
+# bios_mancha/exemplos/multitarefa_c/ e o núcleo do SO são escritos em C,
+# compilados pelo mcc).
 
-.PHONY: all simulador_completo compilador_c bios_mancha so \
-        clean clean-simulador_completo clean-compilador_c clean-bios_mancha clean-so
+.PHONY: all simulador_completo compilador_c bios_mancha so so3 \
+        clean clean-simulador_completo clean-compilador_c clean-bios_mancha clean-so clean-so3
 
-all: simulador_completo compilador_c bios_mancha so
+all: simulador_completo compilador_c bios_mancha so so3
 
 simulador_completo:
 	$(MAKE) -C simulador_completo all
@@ -22,7 +23,10 @@ bios_mancha: simulador_completo compilador_c
 so: simulador_completo compilador_c
 	$(MAKE) -C so all
 
-clean: clean-so clean-compilador_c clean-bios_mancha clean-simulador_completo
+so3: simulador_completo compilador_c
+	$(MAKE) -C so3 all
+
+clean: clean-so3 clean-so clean-compilador_c clean-bios_mancha clean-simulador_completo
 
 clean-simulador_completo:
 	$(MAKE) -C simulador_completo clean
@@ -35,3 +39,6 @@ clean-bios_mancha:
 
 clean-so:
 	$(MAKE) -C so clean
+
+clean-so3:
+	$(MAKE) -C so3 clean
