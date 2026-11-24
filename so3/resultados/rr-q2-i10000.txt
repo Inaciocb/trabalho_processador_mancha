@@ -1,0 +1,97 @@
+[SO] iniciando: escalonador round-robin, quantum 2, relogio a cada 10000 instr
+[SO] memoria: quadros 46 a 103 livres (58 quadros de 512 bytes)
+
+[SO] cria pid 1 (init) na entrada 0, 9 quadros
+init: criando processos
+
+[SO] cria pid 2 (calc) na entrada 1, 7 quadros
+
+[SO] cria pid 3 (eco) na entrada 2, 7 quadros
+
+[SO] cria pid 4 (misto) na entrada 3, 7 quadros
+
+[SO] cria pid 5 (eterno) na entrada 4, 6 quadros
+calc: inicio
+eco: esperando 3 linhas
+
+[SO] cria pid 6 (invasor) na entrada 5, 6 quadros
+init: calc=2 eco=invasor: tentando E/S di3 misto=4 eterno=5 invasmisto: passo 1
+reta
+
+[SO] processo 6 (invasor) morto: instrucao privilegiada em ip=00EE
+
+[SO] fim pid 6 (invasor), entrada 5 livre
+or=6
+init: espera(1, oeco: OLA
+ proprio) = -1
+misto: pasinit: espera(99, inexisso 2
+tente) = -1
+init: cria(programa 42) = -1
+misto: passo 3
+misto: passo 4
+eco: MUNDO
+mcalc: 154 primos
+
+[SO] fim pid 2 (calc), entrada 1 livre
+isto: passo 5
+misto: passo 6
+
+[SO] fim pid 4 (misto), entrada 3 livre
+init: espera(misto) = 0
+
+[SO] fim pid 5 (eterno), entrada 4 livre
+init: mata(eterno) = 0
+init: espera(eterno, ja morto) = -1
+init: espera(calc) = -1
+eco: FIM
+
+[SO] fim pid 3 (eco), entrada 2 livre
+init: espera(eco) = 0
+
+[SO] cria pid 7 (ola) na entrada 1, 6 quadros
+ola: processo novo numa entrada reaproveiinit: ola=7
+tada
+
+[SO] fim pid 7 (ola), entrada 1 livre
+init: espera(ola) = 0
+init: fim
+
+[SO] fim pid 1 (init), entrada 0 livre
+
+================ METRICAS DO SO ================
+escalonador: round-robin, quantum 2 x 10000 instr, E/S bloqueante
+processos criados: 7
+tempo total:       2065932 instr
+tempo ocioso:      736851 instr
+preempcoes:        58
+quadros livres:    58 de 58
+interrupcoes:
+  instrucao privilegiada        1
+  chamada de sistema          621
+  console                       3
+  relogio                     206
+chamadas: le 14, escreve 587, cria 7, mata 6, espera 7
+
+pid programa  retorno preemp  resp.media (n)
+  1 init      2065883      9        3912 (3)
+  2 calc       973091     13           - (0)
+  3 eco       1976594      0       39832 (3)
+  4 misto     1092909     16           - (0)
+  5 eterno    1142357     18           - (0)
+  6 invasor    181556      1           - (0)
+  7 ola         37483      1           - (0)
+
+            vezes em estado     tempo em estado (instr)
+pid programa pron bloq exec     pronto  bloqueado   executando
+  1 init       13    3   13     507423    1259373       299087
+  2 calc       14    0   14     703473          0       269618
+  3 eco         4    3    4     149105    1785451        42038
+  4 misto      17    0   17     769361          0       323548
+  5 eterno     19    0   18     793681          0       348676
+  6 invasor     2    0    2     155182          0        26374
+  7 ola         2    0    2      17792          0        19691
+================================================
+[executor] halt apos 2128571 instrucoes
+[executor] nucleo 671438, ocioso 693631, usuario 763502 instrucoes
+[executor] maior trecho continuo no nucleo: 4923 instrucoes (inicializacao: 14165)
+[executor] menor sp nas pilhas da BIOS (>= 0x8000): 0xDFB6

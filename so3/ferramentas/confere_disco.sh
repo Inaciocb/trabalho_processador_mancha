@@ -4,8 +4,10 @@
 # uso: confere_disco.sh dir prog0 prog1 ...
 #
 # Relê dir/programas_disco.h e confere, para cada programa:
-#   - a imagem começa com a capa: "jmp 6" e, no endereço 4, o tamanho da
-#     própria imagem;
+#   - a imagem começa com a capa: "jmp 8", no endereço 4 o tamanho da
+#     própria imagem e no 6 o início dos dados;
+#   - as páginas de código cobrem até o início dos dados e as de dados vão
+#     dele até o fim;
 #   - os bytes do disco, a partir do setor indicado, são os da imagem, e o
 #     resto do último setor é zero;
 #   - os programas ficam em sequência, sem sobreposição, e o disco não tem
@@ -42,13 +44,26 @@ for prog in "$@"; do
     [ "$nome" = "$prog" ] || falha "posição $i: índice diz '$nome', esperado '$prog'"
 
     capa=$(od -An -tx1 -N4 "$bin" | tr -d ' \n')
-    [ "$capa" = "01e00006" ] || falha "$prog: não começa com 'jmp 6' ($capa)"
+    [ "$capa" = "01e00008" ] || falha "$prog: não começa com 'jmp 8' ($capa)"
 
     tam_capa=$(od -An -tu1 -j4 -N2 "$bin" | awk 'NF { print $1 * 256 + $2; exit }')
     tam_bin=$(wc -c < "$bin" | tr -d ' ')
     [ "$tam_capa" = "$tam_bin" ] || falha "$prog: capa diz $tam_capa bytes, imagem tem $tam_bin"
     [ "$bytes" = "$tam_bin" ] || falha "$prog: índice diz $bytes bytes, imagem tem $tam_bin"
     [ "$pag" = $(( (tam_bin + TAM_SETOR - 1) / TAM_SETOR )) ] || falha "$prog: $pag páginas não cobre $tam_bin bytes"
+
+    ini=$(od -An -tu1 -j6 -N2 "$bin" | awk 'NF { print $1 * 256 + $2; exit }')
+    cod=$(valor prog_codigo $i)
+    dini=$(valor prog_dados_ini $i)
+    dad=$(valor prog_dados $i)
+    [ $((cod * TAM_SETOR)) -ge "$ini" ] && [ $(((cod - 1) * TAM_SETOR)) -lt "$ini" ] ||
+        falha "$prog: $cod páginas de código, mas os dados começam em $ini"
+    if [ "$ini" -lt "$tam_bin" ]; then
+        [ "$dini" = $((ini / TAM_SETOR)) ] && [ $((dini + dad)) = "$pag" ] ||
+            falha "$prog: dados nas páginas $dini+$dad, mas vão de $ini a $tam_bin"
+    else
+        [ "$dad" = 0 ] || falha "$prog: sem dados, mas o índice diz $dad páginas"
+    fi
 
     [ "$setor" = "$esperado" ] || falha "$prog: começa no setor $setor, esperado $esperado (buraco ou sobreposição)"
 
@@ -68,7 +83,7 @@ tam_disco=$(wc -c < "$DISCO" | tr -d ' ')
 [ "$tam_disco" = $((esperado * TAM_SETOR)) ] || falha "disco tem $tam_disco bytes, esperado $((esperado * TAM_SETOR))"
 
 # o núcleo vai incluir o índice: o mcc precisa aceitá-lo
-printf '#include "programas_disco.h"\nint main(void) { return prog_setor[0] + prog_paginas[0] + prog_bytes[0] + prog_nome[0][0]; }\n' > "$DIR/.confere_indice.c"
+printf '#include "programas_disco.h"\nint main(void) { return prog_setor[0] + prog_paginas[0] + prog_bytes[0] + prog_codigo[0] + prog_dados_ini[0] + prog_dados[0] + prog_nome[0][0]; }\n' > "$DIR/.confere_indice.c"
 "$MCC" -I"$DIR" "$DIR/.confere_indice.c" -o "$DIR/.confere_indice.asm" > /dev/null 2>&1 || falha "o mcc não compila programas_disco.h"
 rm -f "$DIR/.confere_indice.c" "$DIR/.confere_indice.asm"
 

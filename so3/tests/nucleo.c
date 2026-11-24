@@ -1,4 +1,5 @@
 // Testes nativos da lógica do núcleo; as portas e a ponte são simuladas.
+#define MEM_FALSA
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -31,10 +32,8 @@ void k_puts(char *s) { (void)s; }
 void para(void) { assert(0); }
 void so_ocioso(void) {}
 int fim_nucleo(void) { return 0x7000; }
-void zera_quadro(int q) { (void)q; }
-void fim_processo(void) {}
-int programa_entrada(int prog) { return prog == PROG_INIT ? 1 : 0; }
-char *programa_nome(int prog) { (void)prog; return "teste"; }
+void zera_quadro(int q) { memset(end_quadro(q), 0, TAM_QUADRO / 2 * sizeof(int)); }
+int disco_le(int face, int trilha, int setor, int *destino) { (void)face; (void)trilha; (void)setor; (void)destino; return 0; }
 
 int main(void)
 {
@@ -49,13 +48,18 @@ int main(void)
     }
     assert(buf_n == 0 && leitura == 100);
 
+    mem_inicia(40, QUADRO_LIMITE - 1);
     atual = -1;
     fila_ini = fila_fim = -1;
     proximo_pid = 1;
     for (i = 0; i < MAX_REG; i++) {
         assert(cria_processo(PROG_INIT) == i + 1);
         assert(tabela[0].reg == i);
+        assert(quadros_livres() == 64 - quadros_do_processo(PROG_INIT));
+        assert((end_quadro(tabela[0].tp)[0] & PG_TIPO) == PG_LEITURA);
+        assert((end_quadro(tabela[0].tp)[255] & PG_TIPO) == PG_ESCRITA);
         mata_processo(0);
+        assert(quadros_livres() == 64);
     }
     assert(cria_processo(PROG_INIT) == -1);
     assert(n_criados == MAX_REG && n_registros == MAX_REG);

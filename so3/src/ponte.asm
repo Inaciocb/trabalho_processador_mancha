@@ -218,6 +218,20 @@ _zq_laco:
         pop     bp
         ret
 
+; int disco_le(int face, int trilha, int setor, int *destino) -- 0 = ok
+_f_disco_le:
+        push    bp
+        ld      bp, sp
+        ld      r0, (bp+4)
+        ld      r1, (bp+6)
+        ld      r2, (bp+8)
+        ld      r3, (bp+10)
+        call    bios_disco_le_setor
+        call    bios_disco_erro
+        ld      sp, bp
+        pop     bp
+        ret
+
 ; void para(void)
 _f_para:
         halt

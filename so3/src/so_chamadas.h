@@ -14,7 +14,7 @@
 #define SO_MATA_PROC    4   // r1 = pid (0 = o próprio); r0 = 0 ou -1
 #define SO_ESPERA_PROC  5   // r1 = pid; r0 = 0 (morreu) ou -1 (erro)
 
-// programas conhecidos pelo SO (usuario/programas.c, tabela_programas)
+// programas do disco, na ordem de build/usuario/programas_disco.h
 #define PROG_INIT     0
 #define PROG_CALC     1
 #define PROG_ECO      2

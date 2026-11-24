@@ -1,4 +1,4 @@
-// so.c -- núcleo do mini sistema operacional do T2 (processos,
+// so.c -- núcleo do mini sistema operacional do T3 (processos,
 // escalonadores, chamadas de sistema, bloqueio e preempção), escrito no
 // subconjunto de C do mcc. O que o C não alcança (portas, "halt", vetor de
 // interrupções, primeiro "rete") está em ponte.asm.
@@ -17,13 +17,13 @@
 #include "config.h"
 #include "so_chamadas.h"
 #include "mem.h"
+#include "programas_disco.h"
 
 #ifndef AUTOTESTE_MEM
 #define AUTOTESTE_MEM 0
 #endif
 
 #define MAX_PROC   8
-#define TAM_PILHA  256
 #define MAX_REG    24
 
 #define P_LIVRE       0
@@ -46,8 +46,16 @@
 #define Q_SP  6
 #define Q_IP  7
 #define Q_SR  8
+#define Q_PT  12
 
 #define SR_S  0x8000
+#define SR_P  0x4000
+
+#define PG_LEITURA 0x4000
+#define PG_ESCRITA 0x8000
+#define PG_TIPO    0xC000
+#define PG_QUADRO  0x1FFF
+#define PG_DADOS   128
 
 // ponte.asm
 int porta_le(int porta);
@@ -60,11 +68,7 @@ void para(void);
 void so_ocioso(void);
 int fim_nucleo(void);
 void zera_quadro(int q);
-
-// usuario/runtime_so.asm e usuario/programas.c
-void fim_processo(void);
-int programa_entrada(int prog);
-char *programa_nome(int prog);
+int disco_le(int face, int trilha, int setor, int *destino);
 
 // ---------------------------------------------------------------- tempo
 //
@@ -325,6 +329,7 @@ struct processo {
     int pid;
     int prog;
     int quadro[16];
+    int tp;               // quadro da tabela de páginas
     int bloqueio;
     int arg;
     int prio;             // em milésimos: 500 = 0,5
@@ -338,7 +343,6 @@ struct processo {
 struct processo tabela[MAX_PROC];
 struct registro registros[MAX_REG];
 int n_registros;
-int pilhas[MAX_PROC][TAM_PILHA];
 
 int atual;            // índice do processo em execução; -1 = nenhum
 
@@ -499,18 +503,87 @@ void desbloqueia(int i, int retorno)
     torna_pronto(i);
 }
 
+// ------------------------------------------------- memória dos processos
+//
+// Cada processo: um quadro para a tabela de páginas, as páginas de código
+// do disco (só leitura), as que têm dados (globais e strings) de novo, como
+// dados, e um quadro de pilha na última página de dados.
+
+int quadros_do_processo(int prog)
+{
+    return prog_codigo[prog] + prog_dados[prog] + 2;
+}
+
+void libera_entrada(int *tp, int k)
+{
+    if (tp[k] & PG_TIPO) {
+        libera_quadro(tp[k] & PG_QUADRO);
+    }
+}
+
+void libera_memoria(struct processo *p, int prog)
+{
+    int *tp;
+    int k;
+
+    tp = end_quadro(p->tp);
+    for (k = 0; k < prog_codigo[prog]; k++) {
+        libera_entrada(tp, k);
+    }
+    for (k = 0; k < prog_dados[prog]; k++) {
+        libera_entrada(tp, PG_DADOS + prog_dados_ini[prog] + k);
+    }
+    libera_entrada(tp, 255);
+    libera_quadro(p->tp);
+}
+
+// n páginas da imagem a partir da página "pag", nas entradas desde "ent"
+int carrega_paginas(int *tp, int ent, int prog, int pag, int n, int tipo)
+{
+    int k;
+    int q;
+    int lin;
+
+    for (k = 0; k < n; k++) {
+        q = aloca_quadro();
+        tp[ent + k] = tipo | q;
+        lin = prog_setor[prog] + pag + k;
+        if (disco_le(lin / 720, (lin / 18) % 40, lin % 18, end_quadro(q)) != 0) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int monta_memoria(struct processo *p, int prog)
+{
+    int *tp;
+    int q;
+
+    p->tp = aloca_quadro();
+    zera_quadro(p->tp);
+    tp = end_quadro(p->tp);
+    q = aloca_quadro();
+    zera_quadro(q);
+    tp[255] = PG_ESCRITA | q;
+    if (carrega_paginas(tp, 0, prog, 0, prog_codigo[prog], PG_LEITURA) < 0
+        || carrega_paginas(tp, PG_DADOS + prog_dados_ini[prog], prog, prog_dados_ini[prog],
+                           prog_dados[prog], PG_ESCRITA) < 0) {
+        k_puts("\n[SO] erro lendo o disco\n");
+        libera_memoria(p, prog);
+        return -1;
+    }
+    return 0;
+}
+
 int cria_processo(int prog)
 {
-    int entrada;
     int i;
     int k;
-    int *topo;
     struct processo *p;
     struct registro *r;
-    void (*saida)(void);
 
-    entrada = programa_entrada(prog);
-    if (entrada == 0) {
+    if (prog < 0 || prog >= DISCO_N_PROGRAMAS) {
         return -1;
     }
     // Preserva as métricas de todos os processos aceitos até o fim.
@@ -522,23 +595,21 @@ int cria_processo(int prog)
     while (i < MAX_PROC && tabela[i].estado != P_LIVRE) {
         i = i + 1;
     }
-    if (i >= MAX_PROC) {
+    if (i >= MAX_PROC || quadros_livres() < quadros_do_processo(prog)) {
         return -1;
     }
 
     p = &tabela[i];
+    if (monta_memoria(p, prog) < 0) {
+        return -1;
+    }
     for (k = 0; k < 16; k++) {
         p->quadro[k] = 0;
     }
-    // a pilha do processo começa com o endereço de fim_processo: se a função
-    // do programa retornar, cai numa chamada SO_MATA_PROC(0)
-    saida = fim_processo;
-    topo = &pilhas[i][TAM_PILHA];
-    topo = topo - 1;
-    *topo = (int) saida;
-    p->quadro[Q_SP] = (int) topo;
-    p->quadro[Q_IP] = entrada;
-    p->quadro[Q_SR] = 0;           // S=0 e I=0 (usuário, sem E/S), D=0
+    p->quadro[Q_SP] = 0xFFFE;
+    p->quadro[Q_IP] = 0;
+    p->quadro[Q_SR] = SR_P;        // usuário, sem E/S, com paginação
+    p->quadro[Q_PT] = (int) end_quadro(p->tp);
 
     p->pid = proximo_pid;
     proximo_pid = proximo_pid + 1;
@@ -563,10 +634,12 @@ int cria_processo(int prog)
     k_puts("\n[SO] cria pid ");
     k_int(p->pid);
     k_puts(" (");
-    k_puts(programa_nome(prog));
+    k_puts(prog_nome[prog]);
     k_puts(") na entrada ");
     k_int(i);
-    k_putc('\n');
+    k_puts(", ");
+    k_int(quadros_do_processo(prog));
+    k_puts(" quadros\n");
     return p->pid;
 }
 
@@ -588,6 +661,7 @@ void mata_processo(int i)
         atual = -1;
     }
     muda_estado(p, P_LIVRE);
+    libera_memoria(p, p->prog);
     if (p->reg >= 0) {
         registros[p->reg].terminou = 1;
         registros[p->reg].termino = agora;
@@ -595,7 +669,7 @@ void mata_processo(int i)
     k_puts("\n[SO] fim pid ");
     k_int(pid);
     k_puts(" (");
-    k_puts(programa_nome(p->prog));
+    k_puts(prog_nome[p->prog]);
     k_puts("), entrada ");
     k_int(i);
     k_puts(" livre\n");
@@ -755,7 +829,7 @@ void trata_excecao(int irq, int *quadro)
         k_puts("\n[SO] processo ");
         k_int(tabela[atual].pid);
         k_puts(" (");
-        k_puts(programa_nome(tabela[atual].prog));
+        k_puts(prog_nome[tabela[atual].prog]);
         k_puts(") morto: ");
         k_puts(nome_irq(irq));
         k_puts(" em ip=");
@@ -941,6 +1015,10 @@ void imprime_metricas(void)
     k_t32(&tempo_ocioso);
     k_puts(" instr\npreempcoes:        ");
     k_int(n_preempcoes);
+    k_puts("\nquadros livres:    ");
+    k_int(quadros_livres());
+    k_puts(" de ");
+    k_int(mem_ultimo() - mem_primeiro() + 1);
     k_puts("\ninterrupcoes:\n");
     for (i = 0; i < 16; i++) {
         if (n_irq[i] > 0) {
@@ -966,7 +1044,7 @@ void imprime_metricas(void)
         r = &registros[k];
         k_int_col(r->pid, 3);
         k_putc(' ');
-        k_str_col(programa_nome(r->prog), 8);
+        k_str_col(prog_nome[r->prog], 8);
         if (r->terminou) {
             t32_sub(&dt, &r->termino, &r->criacao);
             k_t32_col(&dt, 9);
@@ -991,7 +1069,7 @@ void imprime_metricas(void)
         r = &registros[k];
         k_int_col(r->pid, 3);
         k_putc(' ');
-        k_str_col(programa_nome(r->prog), 8);
+        k_str_col(prog_nome[r->prog], 8);
         k_int_col(r->entradas[P_PRONTO], 5);
         k_int_col(r->entradas[P_BLOQUEADO], 5);
         k_int_col(r->entradas[P_EXECUTANDO], 5);

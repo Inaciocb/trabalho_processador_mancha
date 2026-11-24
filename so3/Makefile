@@ -59,31 +59,39 @@ $(CFG)/config.h:
 	printf '#define ESCALONADOR %s\n#define QUANTUM %s\n#define INTERVALO %s\n#define BLOQUEIO %s\n#define AUTOTESTE_MEM %s\n' \
 	  $(ESCALONADOR) $(QUANTUM) $(INTERVALO) $(BLOQUEIO) $(AUTOTESTE_MEM) > $@
 
-$(CFG)/so.asm: src/so.c src/so_chamadas.h src/mem.h $(CFG)/config.h
-	$(MCC) -I$(CFG) -Isrc src/so.c -o $@
+$(CFG)/so.asm: src/so.c src/so_chamadas.h src/mem.h $(CFG)/config.h $(UDIR)/programas_disco.h
+	$(MCC) -I$(CFG) -Isrc -I$(UDIR) src/so.c -o $@
 
 build/mem.asm: src/mem.c src/mem.h
 	@mkdir -p build
 	$(MCC) -Isrc src/mem.c -o $@
 
-build/programas.asm: usuario/programas.c usuario/so.h src/so_chamadas.h
-	@mkdir -p build
-	$(MCC) -I$(RAIZ)/compilador_c/inc -Isrc -Iusuario usuario/programas.c -o $@
-
 # fim_nucleo.asm por último: marca onde começam os quadros livres
-NUCLEO = $(BIOS) src/ponte.asm $(CFG)/so.asm build/mem.asm usuario/runtime_so.asm $(BIBLIO) build/programas.asm src/fim_nucleo.asm
+NUCLEO = $(BIOS) src/ponte.asm $(CFG)/so.asm build/mem.asm src/fim_nucleo.asm
 
 $(CFG)/so.mob: $(NUCLEO)
 	$(MONTADOR) $(NUCLEO) -o $@
 
 # ---- programas de usuário: cada um compilado e montado sozinho, a partir
-# do endereço 0 (entrada.asm primeiro, fim.asm por último)
+# do endereço 0, com o código antes dos dados (ver usuario/entrada.asm)
 
 $(UDIR)/%.asm: usuario/%.c usuario/lib_usuario.c usuario/so.h src/so_chamadas.h
 	@mkdir -p $(UDIR)
 	$(MCC) -I$(RAIZ)/compilador_c/inc -Isrc -Iusuario $< -o $@
 
-$(UDIR)/%.mob: usuario/entrada.asm usuario/runtime_so.asm $(BIBLIO) $(UDIR)/%.asm usuario/fim.asm
+$(UDIR)/biblioteca.asm: $(BIBLIO)
+	@mkdir -p $(UDIR)
+	cp $< $@
+
+# o mcc põe os dados depois de uma linha ".data": separa código e dados
+$(UDIR)/%.codigo.asm: $(UDIR)/%.asm
+	sed '/^\.data/,$$d' $< > $@
+
+$(UDIR)/%.dados.asm: $(UDIR)/%.asm
+	sed -n '/^\.data/,$$p' $< > $@
+
+$(UDIR)/%.mob: usuario/entrada.asm usuario/runtime_so.asm $(UDIR)/biblioteca.codigo.asm $(UDIR)/%.codigo.asm \
+               usuario/inicio_dados.asm $(UDIR)/biblioteca.dados.asm $(UDIR)/%.dados.asm usuario/fim.asm
 	$(MONTADOR) $^ -o $@
 
 # imagem crua de 64 KB; o gera_disco.sh corta no tamanho que a capa informa
@@ -108,18 +116,18 @@ $(EXECUTOR): ferramentas/executor.c $(SIM_SRC)/cpu.c $(SIM_SRC)/dispositivos.c $
 	$(CC) -Wall -Wextra -std=gnu11 -O2 -I$(SIM_SRC) -o $@ $^
 
 roda: all
-	$(EXECUTOR) $(CFG)/so.mob $(ENTRADA)
+	$(EXECUTOR) -D $(DISCO) $(CFG)/so.mob $(ENTRADA)
 
-testes: $(EXECUTOR)
+testes: $(EXECUTOR) disco
 	@mkdir -p bin
 	$(CC) -Wall -Wextra -Wno-int-to-pointer-cast -std=gnu11 -o bin/teste_mem tests/mem.c
 	./bin/teste_mem
-	$(CC) -std=gnu11 -w -Itests -o bin/teste_nucleo tests/nucleo.c
+	$(CC) -std=gnu11 -w -Itests -I$(UDIR) -o bin/teste_nucleo tests/nucleo.c
 	./bin/teste_nucleo
 	$(MAKE) AUTOTESTE_MEM=1 build/so.mob
-	$(EXECUTOR) build/so.mob $(ENTRADA) | grep -E '\[SO\] (memoria|autoteste|PANICO)'
+	$(EXECUTOR) -D $(DISCO) build/so.mob $(ENTRADA) | grep -E '\[SO\] (memoria|autoteste|PANICO)'
 
-relatorio: $(EXECUTOR)
+relatorio: $(EXECUTOR) disco
 	./relatorio.sh
 
 clean:
