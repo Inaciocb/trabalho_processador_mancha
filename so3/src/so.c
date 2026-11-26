@@ -13,6 +13,7 @@
 //   INTERVALO    instruções entre interrupções de relógio
 //   BLOQUEIO     1 = E/S bloqueia o processo (parte II), 0 = devolve -1
 //   AUTOTESTE_MEM 1 = testa o gerenciador de quadros no boot
+//   PRIMEIRO     programa do primeiro processo (PROG_INIT por padrão)
 
 #include "config.h"
 #include "so_chamadas.h"
@@ -21,6 +22,9 @@
 
 #ifndef AUTOTESTE_MEM
 #define AUTOTESTE_MEM 0
+#endif
+#ifndef PRIMEIRO
+#define PRIMEIRO PROG_INIT
 #endif
 
 #define MAX_PROC   8
@@ -1235,7 +1239,7 @@ void so_inicia(int *quadro)
     k_puts(" instr\n");
     inicia_memoria();
 
-    if (cria_processo(PROG_INIT) < 0) {
+    if (cria_processo(PRIMEIRO) < 0) {
         k_puts("[SO] PANICO: nao foi possivel criar o init\n");
         para();
     }

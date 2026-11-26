@@ -6,8 +6,8 @@
 # Relê dir/programas_disco.h e confere, para cada programa:
 #   - a imagem começa com a capa: "jmp 8", no endereço 4 o tamanho da
 #     própria imagem e no 6 o início dos dados;
-#   - as páginas de código cobrem até o início dos dados e as de dados vão
-#     dele até o fim;
+#   - os dados começam numa página nova; as páginas de código cobrem até
+#     lá e as de dados vão dali até o fim;
 #   - os bytes do disco, a partir do setor indicado, são os da imagem, e o
 #     resto do último setor é zero;
 #   - os programas ficam em sequência, sem sobreposição, e o disco não tem
@@ -53,6 +53,7 @@ for prog in "$@"; do
     [ "$pag" = $(( (tam_bin + TAM_SETOR - 1) / TAM_SETOR )) ] || falha "$prog: $pag páginas não cobre $tam_bin bytes"
 
     ini=$(od -An -tu1 -j6 -N2 "$bin" | awk 'NF { print $1 * 256 + $2; exit }')
+    [ $((ini % TAM_SETOR)) -eq 0 ] || falha "$prog: dados em $ini, fora do início de uma página"
     cod=$(valor prog_codigo $i)
     dini=$(valor prog_dados_ini $i)
     dad=$(valor prog_dados $i)

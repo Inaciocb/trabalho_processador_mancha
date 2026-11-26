@@ -22,6 +22,12 @@
 #define PROG_ETERNO   4
 #define PROG_INVASOR  5
 #define PROG_OLA      6
-#define N_PROGRAMAS   7
+#define PROG_PROTECAO 7
+#define PROG_VETOR    8
+#define PROG_AUTOCOD  9
+#define PROG_SALTO    10
+#define PROG_PILHA    11
+#define PROG_GEMEO    12
+#define N_PROGRAMAS   13
 
 #endif

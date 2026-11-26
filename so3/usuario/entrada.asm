@@ -7,11 +7,14 @@
 ;   entrada runtime_so biblioteca(código) prog(código)
 ;   inicio_dados biblioteca(dados) prog(dados) fim
 ;
+; e os dados começando numa página nova (o .org de <prog>.alinha.asm).
+;
 ; Com paginação, todo processo começa em ip=0 virtual, que cai aqui.
 ;
 ;   endereço 0: desvio para _entrada_inicio (4 bytes: instrução + endereço)
 ;   endereço 4: tamanho da imagem em bytes (endereço de _fim_programa)
-;   endereço 6: onde começam os dados (endereço de _inicio_dados)
+;   endereço 6: onde começam os dados (endereço de _inicio_dados,
+;               múltiplo de 512)
 ;
 ; Os dois são lidos pelo gera_disco.sh.
 

@@ -62,6 +62,7 @@ for prog in "$@"; do
     [ "$tam" -gt 8 ] && [ "$tam" -le 65536 ] || erro "$prog: tamanho inválido na capa ($tam)"
     ini=$(od -An -tu1 -j6 -N2 "$full" | awk 'NF { print $1 * 256 + $2; exit }')
     [ "$ini" -ge 8 ] && [ "$ini" -le "$tam" ] || erro "$prog: início dos dados inválido na capa ($ini)"
+    [ $((ini % TAM_SETOR)) -eq 0 ] || erro "$prog: dados não começam numa página nova ($ini)"
 
     head -c "$tam" "$full" > "$DIR/$prog.bin"
     pag=$(( (tam + TAM_SETOR - 1) / TAM_SETOR ))

@@ -1,7 +1,7 @@
 [SO] iniciando: escalonador prioridade, quantum 4, relogio a cada 5000 instr
-[SO] memoria: quadros 46 a 103 livres (58 quadros de 512 bytes)
+[SO] memoria: quadros 47 a 103 livres (57 quadros de 512 bytes)
 
-[SO] cria pid 1 (init) na entrada 0, 9 quadros
+[SO] cria pid 1 (init) na entrada 0, 8 quadros
 init: criando processos
 
 [SO] cria pid 2 (calc) na entrada 1, 7 quadros
@@ -9,7 +9,7 @@ calc: inicio
 
 [SO] cria pid 3 (eco) na entrada 2, 7 quadros
 
-[SO] cria pid 4 (misto) na entrada 3, 7 quadros
+[SO] cria pid 4 (misto) na entrada 3, 6 quadros
 
 [SO] cria pid 5 (eterno) na entrada 4, 6 quadros
 
@@ -62,9 +62,9 @@ init: fim
 escalonador: prioridade, quantum 4 x 5000 instr, E/S bloqueante
 processos criados: 7
 tempo total:       2055222 instr
-tempo ocioso:      633989 instr
-preempcoes:        62
-quadros livres:    58 de 58
+tempo ocioso:      656515 instr
+preempcoes:        60
+quadros livres:    57 de 57
 interrupcoes:
   instrucao privilegiada        1
   chamada de sistema          622
@@ -74,24 +74,24 @@ chamadas: le 14, escreve 588, cria 7, mata 6, espera 7
 
 pid programa  retorno preemp  resp.media (n)
   1 init      2055173     10           0 (2)
-  2 calc      1115302     15           - (0)
+  2 calc      1115583     15           - (0)
   3 eco       1957620      0        4162 (3)
-  4 misto     1207701     18           - (0)
-  5 eterno    1225046     18           - (0)
-  6 invasor    139536      1           - (0)
-  7 ola         26491      0           - (0)
+  4 misto     1175562     17           - (0)
+  5 eterno    1203350     17           - (0)
+  6 invasor    139749      1           - (0)
+  7 ola         26516      0           - (0)
 
             vezes em estado     tempo em estado (instr)
 pid programa pron bloq exec     pronto  bloqueado   executando
-  1 init       13    2   13     535819    1203869       315485
-  2 calc       16    0   16     809857          0       305445
-  3 eco         4    3    4      28757    1894765        34098
-  4 misto      19    0   19     848698          0       359003
-  5 eterno     19    0   18     865522          0       359524
-  6 invasor     2    0    2     110717          0        28819
-  7 ola         1    0    1       7681          0        18810
+  1 init       13    2   13     536313    1199043       319817
+  2 calc       16    0   16     810113          0       305470
+  3 eco         4    3    4      28544    1894978        34098
+  4 misto      18    0   18     823742          0       351820
+  5 eterno     18    0   17     863551          0       339799
+  6 invasor     2    0    2     110930          0        28819
+  7 ola         1    0    1       7681          0        18835
 ================================================
-[executor] halt apos 2127941 instrucoes
-[executor] nucleo 830236, ocioso 549329, usuario 748376 instrucoes
-[executor] maior trecho continuo no nucleo: 4735 instrucoes (inicializacao: 14128)
+[executor] halt apos 2127767 instrucoes
+[executor] nucleo 826655, ocioso 568390, usuario 732722 instrucoes
+[executor] maior trecho continuo no nucleo: 4681 instrucoes (inicializacao: 13872)
 [executor] menor sp nas pilhas da BIOS (>= 0x8000): 0xDFB6
