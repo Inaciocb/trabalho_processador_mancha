@@ -8,6 +8,8 @@
 #     própria imagem e no 6 o início dos dados;
 #   - os dados começam numa página nova; as páginas de código cobrem até
 #     lá e as de dados vão dali até o fim;
+#   - as marcas de página que começa no meio de instrução são as que o
+#     cruza_paginas calcula, uma por página de código;
 #   - os bytes do disco, a partir do setor indicado, são os da imagem, e o
 #     resto do último setor é zero;
 #   - os programas ficam em sequência, sem sobreposição, e o disco não tem
@@ -20,6 +22,7 @@ DISCO=$DIR/disco.img
 INDICE=$DIR/programas_disco.h
 TAM_SETOR=512
 MCC=../compilador_c/bin/mcc
+CRUZA=${CRUZA:-bin/cruza_paginas}
 falhas=0
 
 falha() { echo "  FALHA: $*"; falhas=$((falhas + 1)); }
@@ -66,6 +69,13 @@ for prog in "$@"; do
         [ "$dad" = 0 ] || falha "$prog: sem dados, mas o índice diz $dad páginas"
     fi
 
+    cini=$(valor prog_cruza_ini $i)
+    marcas=""
+    for p in $(seq 0 $((cod - 1))); do
+        marcas="$marcas $(valor pagina_cruza $((cini + p)))"
+    done
+    [ "$(echo $marcas)" = "$("$CRUZA" "$bin")" ] || falha "$prog: marcas de cruzamento erradas ($marcas)"
+
     [ "$setor" = "$esperado" ] || falha "$prog: começa no setor $setor, esperado $esperado (buraco ou sobreposição)"
 
     # conteúdo no disco = imagem; resto do último setor = zeros
@@ -84,7 +94,7 @@ tam_disco=$(wc -c < "$DISCO" | tr -d ' ')
 [ "$tam_disco" = $((esperado * TAM_SETOR)) ] || falha "disco tem $tam_disco bytes, esperado $((esperado * TAM_SETOR))"
 
 # o núcleo vai incluir o índice: o mcc precisa aceitá-lo
-printf '#include "programas_disco.h"\nint main(void) { return prog_setor[0] + prog_paginas[0] + prog_bytes[0] + prog_codigo[0] + prog_dados_ini[0] + prog_dados[0] + prog_nome[0][0]; }\n' > "$DIR/.confere_indice.c"
+printf '#include "programas_disco.h"\nint main(void) { return prog_setor[0] + prog_paginas[0] + prog_bytes[0] + prog_codigo[0] + prog_dados_ini[0] + prog_dados[0] + prog_cruza_ini[0] + pagina_cruza[0] + prog_nome[0][0]; }\n' > "$DIR/.confere_indice.c"
 "$MCC" -I"$DIR" "$DIR/.confere_indice.c" -o "$DIR/.confere_indice.asm" > /dev/null 2>&1 || falha "o mcc não compila programas_disco.h"
 rm -f "$DIR/.confere_indice.c" "$DIR/.confere_indice.asm"
 

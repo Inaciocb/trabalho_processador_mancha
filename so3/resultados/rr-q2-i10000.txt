@@ -1,97 +1,99 @@
 [SO] iniciando: escalonador round-robin, quantum 2, relogio a cada 10000 instr
-[SO] memoria: quadros 46 a 103 livres (58 quadros de 512 bytes)
+[SO] memoria: quadros 49 a 103 livres (55 quadros de 512 bytes)
 
-[SO] cria pid 1 (init) na entrada 0, 8 quadros
+[SO] cria pid 1 (init) na entrada 0, 4 quadros
 init: criando processos
 
-[SO] cria pid 2 (calc) na entrada 1, 7 quadros
+[SO] cria pid 2 (calc) na entrada 1, 3 quadros
 
-[SO] cria pid 3 (eco) na entrada 2, 7 quadros
+[SO] cria pid 3 (eco) na entrada 2, 3 quadros
 
-[SO] cria pid 4 (misto) na entrada 3, 6 quadros
+[SO] cria pid 4 (misto) na entrada 3, 3 quadros
 
-[SO] cria pid 5 (eterno) na entrada 4, 6 quadros
+[SO] cria pid 5 (eterno) na entrada 4, 3 quadros
+
+[SO] cria pid 6 (invasor) na entrada 5, 3 quadros
 calc: inicio
 eco: esperando 3 linhas
-
-[SO] cria pid 6 (invasor) na entrada 5, 6 quadros
-init: calc=2 eco=invasor: tentando E/S di3 misto=4 eterno=5 invasmisto: passo 1
-reta
+invasor: tentando E/S init: calc=2 eco=3 misdireta
 
 [SO] processo 6 (invasor) morto: instrucao privilegiada em ip=00EE
 
-[SO] fim pid 6 (invasor), entrada 5 livre
-or=6
-init: espera(1, oeco: OLA
- proprio) = -1
-misto: pasinit: espera(99, inexisso 2
-tente) = -1
+[SO] fim pid 6 (invasor), entrada 5 livre, 2 faltas de pagina
+to=4 eternomisto: passo 1
+=5 invasor=6
+init: espera(1, o peco: OLA
+roprio) = -1
+mistoinit: espera(99, inexist: passo 2
+ente) = -1
 init: cria(programa 42) = -1
 misto: passo 3
 misto: passo 4
 eco: MUNDO
-mcalc: 154 primos
+calc: 154 primosmisto: passo 5
 
-[SO] fim pid 2 (calc), entrada 1 livre
-isto: passo 5
+
+[SO] fim pid 2 (calc), entrada 1 livre, 4 faltas de pagina
 misto: passo 6
 
-[SO] fim pid 4 (misto), entrada 3 livre
+[SO] fim pid 4 (misto), entrada 3 livre, 3 faltas de pagina
 init: espera(misto) = 0
 
-[SO] fim pid 5 (eterno), entrada 4 livre
+[SO] fim pid 5 (eterno), entrada 4 livre, 2 faltas de pagina
 init: mata(eterno) = 0
 init: espera(eterno, ja morto) = -1
 init: espera(calc) = -1
 eco: FIM
 
-[SO] fim pid 3 (eco), entrada 2 livre
+[SO] fim pid 3 (eco), entrada 2 livre, 3 faltas de pagina
 init: espera(eco) = 0
 
-[SO] cria pid 7 (ola) na entrada 1, 6 quadros
-ola: processo novo numa entrada reaproveiinit: ola=7
-tada
+[SO] cria pid 7 (ola) na entrada 1, 3 quadros
+ola: processo novo numa entrada reaprovinit: ola=7
+eitada
 
-[SO] fim pid 7 (ola), entrada 1 livre
+[SO] fim pid 7 (ola), entrada 1 livre, 2 faltas de pagina
 init: espera(ola) = 0
 init: fim
 
-[SO] fim pid 1 (init), entrada 0 livre
+[SO] fim pid 1 (init), entrada 0 livre, 4 faltas de pagina
 
 ================ METRICAS DO SO ================
 escalonador: round-robin, quantum 2 x 10000 instr, E/S bloqueante
 processos criados: 7
-tempo total:       2065957 instr
-tempo ocioso:      736851 instr
-preempcoes:        58
-quadros livres:    58 de 58
+tempo total:       2066842 instr
+tempo ocioso:      726655 instr
+preempcoes:        59
+quadros livres:    55 de 55
+faltas de pagina:  20 (1 no meio de instrucao)
 interrupcoes:
   instrucao privilegiada        1
+  ausencia de quadro           20
   chamada de sistema          621
-  console                       3
+  console                       2
   relogio                     206
 chamadas: le 14, escreve 587, cria 7, mata 6, espera 7
 
 pid programa  retorno preemp  resp.media (n)
-  1 init      2065908      9        4168 (3)
-  2 calc       972892     13           - (0)
-  3 eco       1976807      0       39832 (3)
-  4 misto     1092567     16           - (0)
-  5 eterno    1142783     18           - (0)
-  6 invasor    181556      1           - (0)
-  7 ola         37508      1           - (0)
+  1 init      2066793      9        4233 (3)
+  2 calc      1017985     14           - (0)
+  3 eco       1978541      0       39992 (3)
+  4 misto     1104821     16           - (0)
+  5 eterno    1155936     18           - (0)
+  6 invasor    177663      1           - (0)
+  7 ola         38907      1           - (0)
 
             vezes em estado     tempo em estado (instr)
 pid programa pron bloq exec     pronto  bloqueado   executando
-  1 init       13    3   13     508653    1258605       298650
-  2 calc       14    0   14     703274          0       269618
-  3 eco         4    3    4     149318    1785451        42038
-  4 misto      17    0   17     769019          0       323548
-  5 eterno     19    0   18     793670          0       349113
-  6 invasor     2    0    2     155182          0        26374
-  7 ola         2    0    2      17792          0        19716
+  1 init       13    3   13     511221    1259905       295667
+  2 calc       15    0   15     743764          0       274221
+  3 eco         4    3    4     151533    1783378        43630
+  4 misto      17    0   17     778280          0       326541
+  5 eterno     19    0   18     805227          0       350709
+  6 invasor     2    0    2     149394          0        28269
+  7 ola         2    0    2      17806          0        21101
 ================================================
-[executor] halt apos 2128472 instrucoes
-[executor] nucleo 670753, ocioso 693656, usuario 764063 instrucoes
-[executor] maior trecho continuo no nucleo: 4923 instrucoes (inicializacao: 13952)
+[executor] halt apos 2132135 instrucoes
+[executor] nucleo 684466, ocioso 684153, usuario 763516 instrucoes
+[executor] maior trecho continuo no nucleo: 4618 instrucoes (inicializacao: 12906)
 [executor] menor sp nas pilhas da BIOS (>= 0x8000): 0xDFB6

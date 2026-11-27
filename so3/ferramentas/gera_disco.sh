@@ -10,7 +10,9 @@
 #   dir/disco.img            os programas em sequência, cada um começando
 #                            num setor novo (1 setor = 512 bytes = 1 página)
 #   dir/programas_disco.h    setor inicial, páginas, bytes, páginas de código,
-#                            primeira página e número de páginas de dados
+#                            primeira página e número de páginas de dados, e
+#                            quais páginas de código começam no meio de uma
+#                            instrução (ferramentas/cruza_paginas.c, em $CRUZA)
 #
 # Tamanho e início dos dados vêm da própria imagem: as palavras nos
 # endereços 4 e 6 (ver usuario/entrada.asm), em big-endian como a memória.
@@ -21,6 +23,7 @@
 set -e
 
 TAM_SETOR=512
+CRUZA=${CRUZA:-bin/cruza_paginas}
 MAX_SETORES=1440        # 2 faces x 40 trilhas x 18 setores (dispositivos.h)
 
 if [ $# -lt 3 ]; then
@@ -49,6 +52,9 @@ bytes=""
 codigo=""
 dados_ini=""
 dados=""
+cruza=""
+cruza_ini=""
+n_cruza=0
 nomes=""
 setor=0
 i=0
@@ -71,14 +77,16 @@ for prog in "$@"; do
     pdini=$(( ini / TAM_SETOR ))
     pdad=$(( pag - pdini ))
     [ "$ini" -lt "$tam" ] || pdad=0
+    marcas=$("$CRUZA" "$DIR/$prog.bin") || erro "$prog: cruza_paginas falhou"
+    [ "$(echo $marcas | wc -w | tr -d ' ')" = "$pcod" ] || erro "$prog: marcas não batem com $pcod páginas de código"
 
     # o programa e zeros até completar o último setor
     cat "$DIR/$prog.bin" >> "$DISCO"
     resto=$(( pag * TAM_SETOR - tam ))
     [ "$resto" -eq 0 ] || head -c "$resto" /dev/zero >> "$DISCO"
 
-    printf '  %-8s setor %4d  %2d paginas  %5d bytes  codigo 0-%d  dados %d+%d\n' \
-        "$prog" "$setor" "$pag" "$tam" $((pcod - 1)) "$pdini" "$pdad"
+    printf '  %-8s setor %4d  %2d paginas  %5d bytes  codigo 0-%d  dados %d+%d  cruza: %s\n' \
+        "$prog" "$setor" "$pag" "$tam" $((pcod - 1)) "$pdini" "$pdad" "$marcas"
 
     sep=""; [ $i -eq 0 ] || sep=", "
     setores="$setores$sep$setor"
@@ -87,6 +95,11 @@ for prog in "$@"; do
     codigo="$codigo$sep$pcod"
     dados_ini="$dados_ini$sep$pdini"
     dados="$dados$sep$pdad"
+    cruza_ini="$cruza_ini$sep$n_cruza"
+    for m in $marcas; do
+        [ $n_cruza -eq 0 ] && cruza="$m" || cruza="$cruza, $m"
+        n_cruza=$((n_cruza + 1))
+    done
     nomes="$nomes$sep\"$prog\""
     setor=$((setor + pag))
     i=$((i + 1))
@@ -98,7 +111,8 @@ cat > "$INDICE" <<EOF
 // prog_paginas[i] setores do disco a partir do setor linear prog_setor[i]
 // (setor linear = (face * 40 + trilha) * 18 + setor). As páginas
 // 0..prog_codigo[i]-1 têm código; prog_dados[i] páginas a partir de
-// prog_dados_ini[i] têm dados.
+// prog_dados_ini[i] têm dados. pagina_cruza[prog_cruza_ini[i] + p] = 1 se a
+// página de código p começa no meio de uma instrução.
 
 #define DISCO_N_PROGRAMAS $i
 
@@ -108,6 +122,8 @@ int prog_bytes[$i] = { $bytes };
 int prog_codigo[$i] = { $codigo };
 int prog_dados_ini[$i] = { $dados_ini };
 int prog_dados[$i] = { $dados };
+int prog_cruza_ini[$i] = { $cruza_ini };
+int pagina_cruza[$n_cruza] = { $cruza };
 char *prog_nome[$i] = { $nomes };
 EOF
 

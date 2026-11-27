@@ -40,6 +40,7 @@
 #define B_ESCREVE  2
 #define B_ESPERA   3
 
+#define IRQ_PAGINA   5
 #define IRQ_SISTEMA  7
 #define IRQ_CONSOLE  8
 #define IRQ_RELOGIO  10
@@ -334,6 +335,7 @@ struct processo {
     int prog;
     int quadro[16];
     int tp;               // quadro da tabela de páginas
+    int faltas;
     int bloqueio;
     int arg;
     int prio;             // em milésimos: 500 = 0,5
@@ -378,6 +380,8 @@ int n_irq[16];
 int n_chamadas[8];
 int n_preempcoes;
 int n_criados;
+int n_faltas;
+int n_cruzadas;      // faltas na segunda palavra de uma instrução
 
 void muda_estado(struct processo *p, int novo)
 {
@@ -509,13 +513,13 @@ void desbloqueia(int i, int retorno)
 
 // ------------------------------------------------- memória dos processos
 //
-// Cada processo: um quadro para a tabela de páginas, as páginas de código
-// do disco (só leitura), as que têm dados (globais e strings) de novo, como
-// dados, e um quadro de pilha na última página de dados.
+// Cada processo: um quadro para a tabela de páginas, as páginas de dados
+// (globais e strings) lidas do disco e um quadro de pilha na última página
+// de dados. As de código (só leitura) vêm do disco na primeira falta.
 
-int quadros_do_processo(int prog)
+int quadros_iniciais(int prog)
 {
-    return prog_codigo[prog] + prog_dados[prog] + 2;
+    return prog_dados[prog] + 2;
 }
 
 void libera_entrada(int *tp, int k)
@@ -570,9 +574,8 @@ int monta_memoria(struct processo *p, int prog)
     q = aloca_quadro();
     zera_quadro(q);
     tp[255] = PG_ESCRITA | q;
-    if (carrega_paginas(tp, 0, prog, 0, prog_codigo[prog], PG_LEITURA) < 0
-        || carrega_paginas(tp, PG_DADOS + prog_dados_ini[prog], prog, prog_dados_ini[prog],
-                           prog_dados[prog], PG_ESCRITA) < 0) {
+    if (carrega_paginas(tp, PG_DADOS + prog_dados_ini[prog], prog, prog_dados_ini[prog],
+                        prog_dados[prog], PG_ESCRITA) < 0) {
         k_puts("\n[SO] erro lendo o disco\n");
         libera_memoria(p, prog);
         return -1;
@@ -599,7 +602,8 @@ int cria_processo(int prog)
     while (i < MAX_PROC && tabela[i].estado != P_LIVRE) {
         i = i + 1;
     }
-    if (i >= MAX_PROC || quadros_livres() < quadros_do_processo(prog)) {
+    // e pelo menos um quadro para a primeira página de código
+    if (i >= MAX_PROC || quadros_livres() < quadros_iniciais(prog) + 1) {
         return -1;
     }
 
@@ -621,6 +625,7 @@ int cria_processo(int prog)
     p->bloqueio = B_NADA;
     p->arg = 0;
     p->prio = 500;
+    p->faltas = 0;
     p->mede_resposta = 0;
     le_agora();
     p->reg = n_registros;
@@ -642,7 +647,7 @@ int cria_processo(int prog)
     k_puts(") na entrada ");
     k_int(i);
     k_puts(", ");
-    k_int(quadros_do_processo(prog));
+    k_int(quadros_iniciais(prog));
     k_puts(" quadros\n");
     return p->pid;
 }
@@ -676,7 +681,9 @@ void mata_processo(int i)
     k_puts(prog_nome[p->prog]);
     k_puts("), entrada ");
     k_int(i);
-    k_puts(" livre\n");
+    k_puts(" livre, ");
+    k_int(p->faltas);
+    k_puts(" faltas de pagina\n");
     for (k = 0; k < MAX_PROC; k++) {
         if (tabela[k].estado == P_BLOQUEADO && tabela[k].bloqueio == B_ESPERA
             && tabela[k].arg == pid) {
@@ -827,9 +834,55 @@ void trata_relogio(void)
 
 // Exceção de CPU: se veio de um processo de usuário, só ele morre; se veio
 // do próprio núcleo (ou do laço ocioso), não há como continuar.
+// Falta de página do processo atual: se o ip cai numa página de código do
+// programa ainda não carregada, lê a página do disco e o processo retoma.
+// Falta em dado não tem volta (o ip já passou da instrução) e mata.
+// Se a página começa no meio de uma instrução e a falta foi na segunda
+// palavra, o ip salvo é o dessa palavra: volta 2 para reexecutar a
+// instrução inteira.
+int trata_falta(int *quadro)
+{
+    struct processo *p;
+    int *tp;
+    int ip;
+    int pag;
+    int q;
+    int lin;
+
+    p = &tabela[atual];
+    ip = quadro[Q_IP];
+    pag = (ip >> 9) & 127;
+    tp = end_quadro(p->tp);
+    if (pag >= prog_codigo[p->prog] || (tp[pag] & PG_TIPO)) {
+        return 0;
+    }
+    q = aloca_quadro();
+    if (q < 0) {
+        k_puts("\n[SO] sem quadro livre para a pagina de codigo\n");
+        return 0;
+    }
+    lin = prog_setor[p->prog] + pag;
+    if (disco_le(lin / 720, (lin / 18) % 40, lin % 18, end_quadro(q)) != 0) {
+        libera_quadro(q);
+        k_puts("\n[SO] erro lendo o disco\n");
+        return 0;
+    }
+    tp[pag] = PG_LEITURA | q;
+    if ((ip & (TAM_QUADRO - 1)) == 0 && pagina_cruza[prog_cruza_ini[p->prog] + pag]) {
+        quadro[Q_IP] = ip - 2;
+        n_cruzadas = n_cruzadas + 1;
+    }
+    p->faltas = p->faltas + 1;
+    n_faltas = n_faltas + 1;
+    return 1;
+}
+
 void trata_excecao(int irq, int *quadro)
 {
     if (atual >= 0 && (quadro[Q_SR] & SR_S) == 0) {
+        if (irq == IRQ_PAGINA && trata_falta(quadro)) {
+            return;
+        }
         k_puts("\n[SO] processo ");
         k_int(tabela[atual].pid);
         k_puts(" (");
@@ -1023,6 +1076,11 @@ void imprime_metricas(void)
     k_int(quadros_livres());
     k_puts(" de ");
     k_int(mem_ultimo() - mem_primeiro() + 1);
+    k_puts("\nfaltas de pagina:  ");
+    k_int(n_faltas);
+    k_puts(" (");
+    k_int(n_cruzadas);
+    k_puts(" no meio de instrucao)");
     k_puts("\ninterrupcoes:\n");
     for (i = 0; i < 16; i++) {
         if (n_irq[i] > 0) {

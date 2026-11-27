@@ -1,97 +1,99 @@
 [SO] iniciando: escalonador prioridade, quantum 1, relogio a cada 5000 instr
-[SO] memoria: quadros 47 a 103 livres (57 quadros de 512 bytes)
+[SO] memoria: quadros 49 a 103 livres (55 quadros de 512 bytes)
 
-[SO] cria pid 1 (init) na entrada 0, 8 quadros
+[SO] cria pid 1 (init) na entrada 0, 4 quadros
 init: criando processos
 
-[SO] cria pid 2 (calc) na entrada 1, 7 quadros
-cal
-[SO] cria pid 3 (eco) na entrada 2, 7 quadros
-eco: c: inicio
-esperando
-[SO] cria pid 4 (misto) na entrada 3, 6 quadros
+[SO] cria pid 2 (calc) na entrada 1, 3 quadros
+ca
+[SO] cria pid 3 (eco) na entrada 2, 3 quadros
+eco: lc: iniciesperando
+[SO] cria pid 4 (misto) na entrada 3, 3 quadros
+o
  3 linhas
-[SO] cria pid 5 (eterno) na entrada 4, 6 quadros
+[SO] cria pid 5 (eterno) na entrada 4, 3 quadros
 
 
-[SO] cria pid 6 (invasor) na entrada 5, 6 quadros
-invasor: tentandinito E/: caS dilc=2reta eco
+[SO] cria pid 6 (invasor) na entrada 5, 3 quadros
+invasor: tentaninitdo E: ca/S dlc=iret2 eca
 
 [SO] processo 6 (invasor) morto: instrucao privilegiada em ip=00EE
 
-[SO] fim pid 6 (invasor), entrada 5 livre
-=3 mistoeco: OLA
-=4 eternmo=5 istoinva: pasor=sso 6
-i1
-nit: espera(1, o proprio) = -1
-init: espera(99,mi inesto:xist pasenteso 2) = 
--1
-init: cria(programa 42) eco: MUNDO
+[SO] fim pid 6 (invasor), entrada 5 livre, 2 faltas de pagina
+o=3 misteco: OLA
+o=4 etermino=5sto: inv pasasorso =6
+1
+init: espera(1, o proprio) = -1
+init: espera(9m9, iistonexi: pastensso te) 2
 = -1
+init: cria(programa 42eco: MUNDO
+) = -1
 misto: passo 3
 misto: passo 4
 misto: passo 5
 calc: 154 primos
 
-[SO] fim pid 2 (calc), entrada 1 livre
+[SO] fim pid 2 (calc), entrada 1 livre, 4 faltas de pagina
 misto: passo 6
 
-[SO] fim pid 4 (misto), entrada 3 livre
+[SO] fim pid 4 (misto), entrada 3 livre, 3 faltas de pagina
 init: espera(misto) = 0
 
-[SO] fim pid 5 (eterno), entrada 4 livre
+[SO] fim pid 5 (eterno), entrada 4 livre, 2 faltas de pagina
 init: mata(eterno) = 0
 init: espera(eterno, ja morto) = -1
 init: espera(calc) = -1
 eco: FIM
 
-[SO] fim pid 3 (eco), entrada 2 livre
+[SO] fim pid 3 (eco), entrada 2 livre, 3 faltas de pagina
 init: espera(eco) = 0
 
-[SO] cria pid 7 (ola) na entrada 1, 6 quadros
-init: oola: procla=7
-esso novo numa entrada reaproveitada
+[SO] cria pid 7 (ola) na entrada 1, 3 quadros
+iniola: pt: ola=7
+rocesso novo numa entrada reaproveitada
 
-[SO] fim pid 7 (ola), entrada 1 livre
+[SO] fim pid 7 (ola), entrada 1 livre, 2 faltas de pagina
 init: espera(ola) = 0
 init: fim
 
-[SO] fim pid 1 (init), entrada 0 livre
+[SO] fim pid 1 (init), entrada 0 livre, 4 faltas de pagina
 
 ================ METRICAS DO SO ================
 escalonador: prioridade, quantum 1 x 5000 instr, E/S bloqueante
 processos criados: 7
-tempo total:       2066456 instr
-tempo ocioso:      170106 instr
-preempcoes:        350
-quadros livres:    57 de 57
+tempo total:       2067404 instr
+tempo ocioso:      145457 instr
+preempcoes:        354
+quadros livres:    55 de 55
+faltas de pagina:  20 (1 no meio de instrucao)
 interrupcoes:
   instrucao privilegiada        1
+  ausencia de quadro           20
   chamada de sistema          621
   console                       2
   relogio                     413
 chamadas: le 14, escreve 587, cria 7, mata 6, espera 7
 
 pid programa  retorno preemp  resp.media (n)
-  1 init      2066407     53           0 (3)
-  2 calc      1593021     87           - (0)
-  3 eco       1972550      6        2481 (3)
-  4 misto     1659902     97           - (0)
-  5 eterno    1669194     97           - (0)
-  6 invasor    138707      8           - (0)
-  7 ola         36815      2           - (0)
+  1 init      2067355     53           0 (3)
+  2 calc      1612284     88           - (0)
+  3 eco       1973487      7        2481 (3)
+  4 misto     1679982     98           - (0)
+  5 eterno    1689340     98           - (0)
+  6 invasor    140118      8           - (0)
+  7 ola         32964      2           - (0)
 
             vezes em estado     tempo em estado (instr)
 pid programa pron bloq exec     pronto  bloqueado   executando
-  1 init       57    3   57     711752     959427       395228
-  2 calc       88    0   88    1169066          0       423955
-  3 eco        10    3   10      64225    1858976        49349
-  4 misto      98    0   98    1172170          0       487732
-  5 eterno     98    0   97    1193569          0       475625
-  6 invasor     9    0    9      96396          0        42311
-  7 ola         3    0    3      14714          0        22101
+  1 init       57    3   57     720338     947541       399476
+  2 calc       89    0   89    1184310          0       427974
+  3 eco        11    3   11      63977    1856472        53038
+  4 misto      99    0   99    1185244          0       494738
+  5 eterno     99    0   98    1210210          0       479130
+  6 invasor     9    0    9      95887          0        44231
+  7 ola         3    0    3       9653          0        23311
 ================================================
-[executor] halt apos 2134244 instrucoes
-[executor] nucleo 1261605, ocioso 144650, usuario 727989 instrucoes
-[executor] maior trecho continuo no nucleo: 4979 instrucoes (inicializacao: 13872)
+[executor] halt apos 2137958 instrucoes
+[executor] nucleo 1279429, ocioso 127763, usuario 730766 instrucoes
+[executor] maior trecho continuo no nucleo: 4852 instrucoes (inicializacao: 12869)
 [executor] menor sp nas pilhas da BIOS (>= 0x8000): 0xDFB6

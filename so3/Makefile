@@ -37,6 +37,7 @@ BIBLIO   = $(RAIZ)/compilador_c/rt/biblioteca.asm
 SIM_SRC  = $(RAIZ)/simulador_completo/src
 MOB2BIN  = $(RAIZ)/simulador_completo/bin/mob2bin
 EXECUTOR = bin/executor
+CRUZA    = bin/cruza_paginas
 
 # cada configuração tem seu diretório: trocar de configuração nunca reusa
 # um núcleo compilado com outra
@@ -115,18 +116,22 @@ $(UDIR)/%.mob: $(PARTES_CODIGO) $(UDIR)/%.alinha.asm $(PARTES_DADOS)
 $(UDIR)/%.full: $(UDIR)/%.mob
 	$(MOB2BIN) $< 65536 $@
 
-$(DISCO): ferramentas/gera_disco.sh src/so_chamadas.h $(PROGRAMAS:%=$(UDIR)/%.full)
-	sh ferramentas/gera_disco.sh src/so_chamadas.h $(UDIR) $(PROGRAMAS)
+$(DISCO): ferramentas/gera_disco.sh src/so_chamadas.h $(CRUZA) $(PROGRAMAS:%=$(UDIR)/%.full)
+	CRUZA=$(CRUZA) sh ferramentas/gera_disco.sh src/so_chamadas.h $(UDIR) $(PROGRAMAS)
 
 $(UDIR)/programas_disco.h: $(DISCO)
 
 disco: $(DISCO)
 
 confere-disco: $(DISCO)
-	sh ferramentas/confere_disco.sh $(UDIR) $(PROGRAMAS)
+	CRUZA=$(CRUZA) sh ferramentas/confere_disco.sh $(UDIR) $(PROGRAMAS)
 
 # os .asm/.mob/.full intermediários ficam (úteis para depurar)
 .SECONDARY:
+
+$(CRUZA): ferramentas/cruza_paginas.c $(SIM_SRC)/instrucao.c
+	@mkdir -p bin
+	$(CC) -Wall -Wextra -std=gnu11 -O2 -I$(SIM_SRC) -o $@ $^
 
 $(EXECUTOR): ferramentas/executor.c $(SIM_SRC)/cpu.c $(SIM_SRC)/dispositivos.c $(SIM_SRC)/memoria.c $(SIM_SRC)/objeto.c $(SIM_SRC)/instrucao.c
 	@mkdir -p bin

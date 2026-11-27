@@ -1,18 +1,18 @@
 [SO] iniciando: escalonador simples (parte I), quantum 4, relogio a cada 5000 instr
-[SO] memoria: quadros 45 a 103 livres (59 quadros de 512 bytes)
+[SO] memoria: quadros 48 a 103 livres (56 quadros de 512 bytes)
 
-[SO] cria pid 1 (init) na entrada 0, 8 quadros
+[SO] cria pid 1 (init) na entrada 0, 4 quadros
 init: criando processos
 
-[SO] cria pid 2 (calc) na entrada 1, 7 quadros
+[SO] cria pid 2 (calc) na entrada 1, 3 quadros
 
-[SO] cria pid 3 (eco) na entrada 2, 7 quadros
+[SO] cria pid 3 (eco) na entrada 2, 3 quadros
 
-[SO] cria pid 4 (misto) na entrada 3, 6 quadros
+[SO] cria pid 4 (misto) na entrada 3, 3 quadros
 
-[SO] cria pid 5 (eterno) na entrada 4, 6 quadros
+[SO] cria pid 5 (eterno) na entrada 4, 3 quadros
 
-[SO] cria pid 6 (invasor) na entrada 5, 6 quadros
+[SO] cria pid 6 (invasor) na entrada 5, 3 quadros
 init: calc=2 eco=3 misto=4 eterno=5 invasor=6
 init: espera(1, o proprio) = -1
 init: espera(99, inexistente) = -1
@@ -20,7 +20,7 @@ init: cria(programa 42) = -1
 calc: inicio
 calc: 154 primos
 
-[SO] fim pid 2 (calc), entrada 1 livre
+[SO] fim pid 2 (calc), entrada 1 livre, 4 faltas de pagina
 eco: esperando 3 linhas
 eco: OLA
 misto: passo 1
@@ -30,10 +30,10 @@ misto: passo 4
 misto: passo 5
 misto: passo 6
 
-[SO] fim pid 4 (misto), entrada 3 livre
+[SO] fim pid 4 (misto), entrada 3 livre, 3 faltas de pagina
 init: espera(misto) = 0
 
-[SO] fim pid 5 (eterno), entrada 4 livre
+[SO] fim pid 5 (eterno), entrada 4 livre, 0 faltas de pagina
 init: mata(eterno) = 0
 init: espera(eterno, ja morto) = -1
 init: espera(calc) = -1
@@ -41,57 +41,59 @@ invasor: tentando E/S direta
 
 [SO] processo 6 (invasor) morto: instrucao privilegiada em ip=00EE
 
-[SO] fim pid 6 (invasor), entrada 5 livre
+[SO] fim pid 6 (invasor), entrada 5 livre, 2 faltas de pagina
 eco: MUNDO
 eco: FIM
 
-[SO] fim pid 3 (eco), entrada 2 livre
+[SO] fim pid 3 (eco), entrada 2 livre, 3 faltas de pagina
 init: espera(eco) = 0
 
-[SO] cria pid 7 (ola) na entrada 1, 6 quadros
+[SO] cria pid 7 (ola) na entrada 1, 3 quadros
 init: ola=7
 ola: processo novo numa entrada reaproveitada
 
-[SO] fim pid 7 (ola), entrada 1 livre
+[SO] fim pid 7 (ola), entrada 1 livre, 2 faltas de pagina
 init: espera(ola) = 0
 init: fim
 
-[SO] fim pid 1 (init), entrada 0 livre
+[SO] fim pid 1 (init), entrada 0 livre, 4 faltas de pagina
 
 ================ METRICAS DO SO ================
 escalonador: simples (parte I), quantum 4 x 5000 instr, E/S bloqueante
 processos criados: 7
-tempo total:       2059695 instr
-tempo ocioso:      1168388 instr
+tempo total:       2060784 instr
+tempo ocioso:      1166010 instr
 preempcoes:        0
-quadros livres:    59 de 59
+quadros livres:    56 de 56
+faltas de pagina:  18 (1 no meio de instrucao)
 interrupcoes:
   instrucao privilegiada        1
+  ausencia de quadro           18
   chamada de sistema          621
   console                       3
-  relogio                     411
+  relogio                     412
 chamadas: le 14, escreve 587, cria 7, mata 6, espera 7
 
 pid programa  retorno preemp  resp.media (n)
-  1 init      2059646      0           0 (3)
-  2 calc       323815      0           - (0)
-  3 eco       1981714      0           0 (2)
-  4 misto      652803      0           - (0)
-  5 eterno     673352      0           - (0)
-  6 invasor    772834      0           - (0)
-  7 ola         30544      0           - (0)
+  1 init      2060735      0           0 (3)
+  2 calc       324239      0           - (0)
+  3 eco       1978448      0           0 (2)
+  4 misto      655378      0           - (0)
+  5 eterno     677154      0           - (0)
+  6 invasor    779288      0           - (0)
+  7 ola         26452      0           - (0)
 
             vezes em estado     tempo em estado (instr)
 pid programa pron bloq exec     pronto  bloqueado   executando
-  1 init        4    3    4          0    1822782       236864
-  2 calc        1    0    1      82033          0       241782
-  3 eco         3    2    3     318938    1618388        44388
-  4 misto       1    0    1     332361          0       320442
-  5 eterno      1    0    0     673352          0            0
-  6 invasor     1    0    1     743908          0        28926
-  7 ola         1    0    1      11688          0        18856
+  1 init        4    3    4          0    1831551       229184
+  2 calc        1    0    1      74923          0       249316
+  3 eco         3    2    3     315279    1616832        46337
+  4 misto       1    0    1     331380          0       323998
+  5 eterno      1    0    0     677154          0            0
+  6 invasor     1    0    1     753389          0        25899
+  7 ola         1    0    1       6461          0        19991
 ================================================
-[executor] halt apos 2124765 instrucoes
-[executor] nucleo 712649, ocioso 949937, usuario 462179 instrucoes
-[executor] maior trecho continuo no nucleo: 4625 instrucoes (inicializacao: 13971)
+[executor] halt apos 2128745 instrucoes
+[executor] nucleo 723201, ocioso 943345, usuario 462199 instrucoes
+[executor] maior trecho continuo no nucleo: 4831 instrucoes (inicializacao: 12925)
 [executor] menor sp nas pilhas da BIOS (>= 0x8000): 0xDFB6

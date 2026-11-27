@@ -55,8 +55,8 @@ int main(void)
     for (i = 0; i < MAX_REG; i++) {
         assert(cria_processo(PROG_INIT) == i + 1);
         assert(tabela[0].reg == i);
-        assert(quadros_livres() == 64 - quadros_do_processo(PROG_INIT));
-        assert((end_quadro(tabela[0].tp)[0] & PG_TIPO) == PG_LEITURA);
+        assert(quadros_livres() == 64 - quadros_iniciais(PROG_INIT));
+        assert((end_quadro(tabela[0].tp)[0] & PG_TIPO) == 0);
         assert((end_quadro(tabela[0].tp)[255] & PG_TIPO) == PG_ESCRITA);
         mata_processo(0);
         assert(quadros_livres() == 64);
